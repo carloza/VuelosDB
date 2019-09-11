@@ -164,13 +164,12 @@ CREATE TABLE reserva_vuelo_clase (
 #-------------------------------------------------------------------------
 # Creación de vistas 
 # 
-   #FALTA: TIEMPO ESTIMADO DE VUELO
    #FALTA: CANT ASIENTOS DISPONIBLES.
-   #a_s.nombre,a_s.ciudad,a_s.estado,a_s.pais,
-   #a_l.nombre,a_l.ciudad,a_l.estado,a_l.pais,
+
    CREATE VIEW vuelos_disponibles AS 
    SELECT
 		v_p.numero,m_a.modelo,i_v.fecha,s.dia,s.hora_sale,s.hora_llega,
+		TIMEDIFF(s.hora_llega,s.hora_sale) AS tiempo_vuelo_estimado,
 		v_p.aeropuerto_salida,
 		a_s.nombre AS nombre_salida ,a_s.ciudad AS ciudad_salida,a_s.estado AS estado_salida,a_s.pais AS pais_salida,
 		v_p.aeropuerto_llegada,
