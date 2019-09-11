@@ -5,7 +5,7 @@ CREATE DATABASE vuelos;
 USE vuelos;
 
 #-------------------------------------------------------------------------
-# Creación Tablas para las entidades y relaciones
+# Creación Tablas para las entidades
 
 CREATE TABLE ubicaciones (
 	pais VARCHAR(45) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE ubicaciones (
 	CONSTRAINT pk_ubicaciones PRIMARY KEY (pais, estado, ciudad)
 )ENGINE=InnoDB;
 
-CREATE TABLE aeropuetos (
+CREATE TABLE aeropuertos (
 	codigo VARCHAR(45) NOT NULL,
 	nombre VARCHAR(45) NOT NULL,
 	telefono VARCHAR(45) NOT NULL,
@@ -31,12 +31,12 @@ CREATE TABLE aeropuetos (
 
 CREATE TABLE vuelos_programados (
 	numero VARCHAR(45) NOT NULL,
-	aeropueto_salida VARCHAR(45) NOT NULL,
-	aeropueto_llegada VARCHAR(45) NOT NULL,
+	aeropuerto_salida VARCHAR(45) NOT NULL,
+	aeropuerto_llegada VARCHAR(45) NOT NULL,
 
 	CONSTRAINT pk_vuelos_programados PRIMARY KEY (numero),
-	CONSTRAINT fk_vuelos_programados_aeropuerto_salida FOREIGN KEY (aeropueto_salida) REFERENCES aeropuetos(codigo),
-	CONSTRAINT fk_vuelos_programados_aeropuerto_llegada FOREIGN KEY(aeropueto_llegada) REFERENCES aeropuetos(codigo)
+	CONSTRAINT fk_vuelos_programados_aeropuerto_salida FOREIGN KEY (aeropuerto_salida) REFERENCES aeropuertos(codigo),
+	CONSTRAINT fk_vuelos_programados_aeropuerto_llegada FOREIGN KEY(aeropuerto_llegada) REFERENCES aeropuertos(codigo)
 )ENGINE = InnoDB;
 
 CREATE TABLE modelos_avion (
@@ -52,7 +52,7 @@ CREATE TABLE salidas (
 	vuelo VARCHAR(45) NOT NULL,
 	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')), #### va NOT NULL?
 	hora_sale TIME NOT NULL,
-	hora_llegada TIME NOT NULL,
+	hora_llega TIME NOT NULL,
 	modelo_avion VARCHAR(45) NOT NULL,
 
 	CONSTRAINT pk_salidas PRIMARY KEY (vuelo, dia),
@@ -60,7 +60,7 @@ CREATE TABLE salidas (
 	CONSTRAINT fk_salida_modelos_avion FOREIGN KEY (modelo_avion) REFERENCES  modelos_avion(modelo)
 )ENGINE = InnoDB;
 
-CREATE TABLE instacias_vuelo(
+CREATE TABLE instancias_vuelo(
 	vuelo VARCHAR(45) NOT NULL,
 	fecha DATE NOT NULL,
 	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
@@ -123,6 +123,10 @@ CREATE TABLE reservas(
 	CONSTRAINT fk_legajo_reservas FOREIGN KEY (legajo) REFERENCES empleados(legajo)
 )ENGINE = InnoDB;
 
+#-------------------------------------------------------------------------
+# Creación Tablas para las relaciones
+
+
 CREATE TABLE brinda(
 	vuelo VARCHAR(45) NOT NULL,
 	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
@@ -152,6 +156,56 @@ CREATE TABLE reserva_vuelo_clase (
 
 	CONSTRAINT pk_reserva_vuelo_clase PRIMARY KEY (numero, vuelo, fecha_vuelo),
 	CONSTRAINT fk_numero_reserva_vuelo_clase FOREIGN KEY (numero) REFERENCES reservas(numero),
-	CONSTRAINT fk_vuelo_fecha_vuelo_reserva_vuelo_clase FOREIGN KEY (vuelo, fecha_vuelo) REFERENCES instacias_vuelo(vuelo, fecha),
+	CONSTRAINT fk_vuelo_fecha_vuelo_reserva_vuelo_clase FOREIGN KEY (vuelo, fecha_vuelo) REFERENCES instancias_vuelo(vuelo, fecha),
 	CONSTRAINT fk_clase_reserva_vuelo_clase FOREIGN KEY (clase) REFERENCES clases(nombre)
 )ENGINE = InnoDB;
+
+
+#-------------------------------------------------------------------------
+# Creación de vistas 
+# 
+   #FALTA: TIEMPO ESTIMADO DE VUELO
+   #FALTA: CANT ASIENTOS DISPONIBLES.
+   #a_s.nombre,a_s.ciudad,a_s.estado,a_s.pais,
+   #a_l.nombre,a_l.ciudad,a_l.estado,a_l.pais,
+   CREATE VIEW vuelos_disponibles AS 
+   SELECT
+		v_p.numero,m_a.modelo,i_v.fecha,s.dia,s.hora_sale,s.hora_llega,
+		v_p.aeropuerto_salida,
+		a_s.nombre AS nombre_salida ,a_s.ciudad AS ciudad_salida,a_s.estado AS estado_salida,a_s.pais AS pais_salida,
+		v_p.aeropuerto_llegada,
+		a_l.nombre AS nombre_llegada,a_l.ciudad AS ciudad_llegada,a_l.estado AS estado_llegada,a_l.pais AS pais_llegada,
+		b.precio
+   FROM 
+		(vuelos_programados as v_p JOIN aeropuertos as a_s ON v_p.aeropuerto_salida = a_s.codigo JOIN aeropuertos as a_l ON v_p.aeropuerto_llegada = a_l.codigo JOIN salidas as s JOIN instancias_vuelo as i_v JOIN brinda as b JOIN modelos_avion as m_a);
+
+
+#-------------------------------------------------------------------------
+# Creación de usuarios y otorgamiento de privilegios
+
+# Usuario: admin
+# Acceso total a la base de datos vuelos.
+ 
+   CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';
+   GRANT ALL PRIVILEGES ON vuelos.* TO 'admin'@'localhost' WITH GRANT OPTION;
+
+
+# Usuario: empleado
+# Permiso de lectura: todas las tablas.
+# Permiso para insertar,modificar y actualizar: tablas reservas, pasajeros y reserva_vuelo_clase.
+
+	DROP USER ''@'localhost';
+    CREATE USER 'empleado'@'localhost' IDENTIFIED BY 'empleado'; 
+    GRANT SELECT ON vuelos.* TO 'empleado'@'localhost';
+	GRANT INSERT, DELETE, UPDATE on vuelos.reservas TO 'empleado'@'localhost';
+	GRANT INSERT, DELETE, UPDATE on vuelos.pasajeros TO 'empleado'@'localhost';
+	GRANT INSERT, DELETE, UPDATE on vuelos.reserva_vuelo_clase TO 'empleado'@'localhost';
+
+	
+# Usuario: cliente
+# Permiso de lectura: vista 'vuelos_disponibles'>
+	CREATE USER 'cliente'@'localhost' IDENTIFIED BY 'cliente'; 
+    GRANT SELECT ON vuelos.vuelos_disponibles TO 'cliente'@'localhost';
+	
+
+
