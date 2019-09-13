@@ -11,7 +11,8 @@ CREATE TABLE ubicaciones (
 	pais VARCHAR(45) NOT NULL,
 	estado VARCHAR(45) NOT NULL,
 	ciudad VARCHAR(45) NOT NULL,
-	huso SMALLINT UNSIGNED NOT NULL CHECK(huso BETWEEN -12 AND 12),
+	huso SMALLINT UNSIGNED NOT NULL,
+	CHECK(huso>=-12), CHECK(huso<=12),
 	
 	CONSTRAINT pk_ubicaciones PRIMARY KEY (pais, estado, ciudad)
 )ENGINE=InnoDB;
@@ -50,7 +51,7 @@ CREATE TABLE modelos_avion (
 
 CREATE TABLE salidas (
 	vuelo VARCHAR(45) NOT NULL,
-	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')), #### va NOT NULL?
+	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
 	hora_sale TIME NOT NULL,
 	hora_llega TIME NOT NULL,
 	modelo_avion VARCHAR(45) NOT NULL,
@@ -72,7 +73,8 @@ CREATE TABLE instancias_vuelo(
 
 CREATE TABLE clases (
 	nombre VARCHAR(45) NOT NULL,
-	porcentaje DECIMAL NOT NULL CHECK(porcentaje BETWEEN 0.00 AND 0.99),
+	porcentaje DECIMAL(2,2) NOT NULL,
+	CHECK(porcentaje >= 0.00), CHECK(porcentaje <= 0.99),
 
 	CONSTRAINT pk_clases PRIMARY KEY (nombre)
 )ENGINE = InnoDB;
@@ -164,20 +166,19 @@ CREATE TABLE reserva_vuelo_clase (
 #-------------------------------------------------------------------------
 # Creación de vistas 
 # 
-   #FALTA: CANT ASIENTOS DISPONIBLES.
-
-   CREATE VIEW vuelos_disponibles AS 
-   SELECT
-		v_p.numero,m_a.modelo,i_v.fecha,s.dia,s.hora_sale,s.hora_llega,
-		TIMEDIFF(s.hora_llega,s.hora_sale) AS tiempo_vuelo_estimado,
-		v_p.aeropuerto_salida,
-		a_s.nombre AS nombre_salida ,a_s.ciudad AS ciudad_salida,a_s.estado AS estado_salida,a_s.pais AS pais_salida,
-		v_p.aeropuerto_llegada,
-		a_l.nombre AS nombre_llegada,a_l.ciudad AS ciudad_llegada,a_l.estado AS estado_llegada,a_l.pais AS pais_llegada,
-		b.precio
-   FROM 
-		(vuelos_programados as v_p JOIN aeropuertos as a_s ON v_p.aeropuerto_salida = a_s.codigo JOIN aeropuertos as a_l ON v_p.aeropuerto_llegada = a_l.codigo JOIN salidas as s JOIN instancias_vuelo as i_v JOIN brinda as b JOIN modelos_avion as m_a);
-
+	#FALTA: CANT ASIENTOS DISPONIBLES.
+	
+	CREATE VIEW vuelos_disponibles AS 
+	SELECT 
+	v_p.numero, i_v.fecha AS fecha_vuelo, i_v.dia AS dia_vuelo, 
+	s.hora_sale, s.hora_llega, TIMEDIFF(s.hora_llega,s.hora_sale) AS tiempo_vuelo_estimado,
+	v_p.aeropuerto_salida, a_s.nombre AS nombre_ap_salida,a_s.ciudad AS 	ciudad_salida,a_s.estado AS estado_salida,a_s.pais AS pais_salida, 
+	v_p.aeropuerto_llegada,a_l.nombre AS nombre_ap_llegada,a_l.ciudad AS ciudad_llegada,a_l.estado AS estado_llegada,a_l.pais AS pais_llegada,
+	b.clase as clase, b.precio as precio_pasaje, b.cant_asientos
+   
+	FROM 
+	((((((vuelos_programados as v_p JOIN aeropuertos as a_s ON v_p.aeropuerto_salida = a_s.codigo) JOIN aeropuertos as a_l ON v_p.aeropuerto_llegada = a_l.codigo) JOIN salidas as s ON v_p.numero = s.vuelo) JOIN instancias_vuelo as i_v ON v_p.numero = i_v.vuelo) JOIN brinda as b ON v_p.numero = b.vuelo) JOIN reserva_vuelo_clase as r_v_c ON (i_v.vuelo = r_v_c.vuelo) and (r_v_c.clase = b.clase));
+	
 
 #-------------------------------------------------------------------------
 # Creación de usuarios y otorgamiento de privilegios

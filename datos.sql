@@ -21,17 +21,18 @@ INSERT INTO modelos_avion VALUES ("737-800", "Boeing", 2, 126);
 INSERT INTO modelos_avion VALUES ("A330", "Airbus", 3, 410);
 INSERT INTO modelos_avion VALUES ("190", "Embraer", 1, 100);
 
-INSERT INTO salidas VALUES ("1001", "Lu", '09:00:00', '09:50:00',"190");
-INSERT INTO salidas VALUES ("2001", "Lu", '11:00:00', '13:00:00',"737-800");
-INSERT INTO salidas VALUES ("2051", "Ma", '06:00:00', '07:00:00',"A330");
+INSERT INTO salidas VALUES ("1001", 'Lu', '09:00:00', '09:50:00',"190");
+INSERT INTO salidas VALUES ("2001", 'Lu', '11:00:00', '13:00:00',"737-800");
+INSERT INTO salidas VALUES ("2051", 'Ma', '06:00:00', '07:00:00',"A330");
 
-INSERT INTO instancias_vuelo VALUES ("1001", "2019/09/16", 'Lu', 'A tiempo');
-INSERT INTO instancias_vuelo VALUES ("2051", "2019/09/17", 'Ma', 'Demorado');
-INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', 'Cancelado');
+INSERT INTO instancias_vuelo VALUES ("1001", "2019/09/16", 'Lu', "A tiempo");
+INSERT INTO instancias_vuelo VALUES ("2051", "2019/09/17", 'Ma', "Demorado");
+INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "Cancelado");
 
-INSERT INTO clases VALUES ("Economica", 0.70);
-INSERT INTO clases VALUES ("Primera", 0.10);
-INSERT INTO clases VALUES ("Ejecutiva", 0.20);
+
+INSERT INTO clases VALUES ("Economica", 0.8);
+INSERT INTO clases VALUES ("Primera", 0.1);
+INSERT INTO clases VALUES ("Ejecutiva", 0.2);
 
 INSERT INTO comodidades VALUES (1, "Bebidas");
 INSERT INTO comodidades VALUES (2, "Pantalla interactiva");
@@ -45,9 +46,12 @@ INSERT INTO pasajeros VALUES ("DNI", 22358180, "Martinez", "Carlos","Av. Alem 30
 INSERT INTO empleados VALUES (105721, "empleado123", "DNI", 22358180, "Martinez", "Carlos","Av. Alem 3000",291524213);
 
 INSERT INTO reservas VALUES (1, "2019/08/10", "2019/12/10", "Pagada", "DNI", 12358179,105721);
+INSERT INTO reservas VALUES (2, "2019/08/02", "2020/02/10", "Pendiente de pago", "DNI", 32358449,105721);
+INSERT INTO reservas VALUES (3, "2019/08/02", "2020/02/10", "Pendiente de pago", "DNI", 22358180,105721);
 
-INSERT INTO brinda VALUES (1001, "2019/09/16", "Primera", 9000.51, 5);
-INSERT INTO brinda VALUES (1001, "2019/10/16", "Economica", 1000.00, 80);
+INSERT INTO brinda VALUES (1001, 'Lu', "Primera", 9000.51, 5);
+INSERT INTO brinda VALUES (2051, 'Ma', "Primera", 15000.00, 50);
+INSERT INTO brinda VALUES (1001, 'Lu', "Economica", 1000.00, 80);
 
 INSERT INTO posee VALUES ("Economica", 1);
 INSERT INTO posee VALUES ("Economica", 2);
@@ -60,4 +64,8 @@ INSERT INTO posee VALUES ("Primera", 3);
 INSERT INTO posee VALUES ("Primera", 4);
 
 INSERT INTO reserva_vuelo_clase VALUES (1,1001,"2019/09/16","Primera");
+INSERT INTO reserva_vuelo_clase VALUES (2,1001,"2019/09/16","Economica");
+INSERT INTO reserva_vuelo_clase VALUES (3,1001,"2019/09/16","Economica");
+
+
 
