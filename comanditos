@@ -1,0 +1,7 @@
+mysql -u root -p
+source vuelos.sql
+drop database vuelos;
+drop user ''@'localhost';
+drop user 'admin'@'localhost';
+drop user 'empleado'@'localhost';
+drop user 'cliente'@'localhost';
