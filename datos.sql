@@ -87,8 +87,8 @@ INSERT INTO pasajeros VALUES ("DNI", 32358449, "Perez", "Julieta","Rodriguez 391
 INSERT INTO pasajeros VALUES ("DNI", 22358180, "Martinez", "Carlos","Av. Alem 3000",54291524213,"Argentina");
 INSERT INTO pasajeros VALUES ("DNI", 42000123, "Gonzalez", "Esteban","Av. Gral. Paz 1234",5411454545,"Chile");
 
-INSERT INTO empleados VALUES (105721, "empleado105721", "DNI", 22358180, "Martinez", "Carlos","Av. Alem 3000",54229152423);
-INSERT INTO empleados VALUES (105757, "empleado105757", "DNI", 25865925, "Larreta", "Alberto","Estomba 300",54112524213);
+INSERT INTO empleados VALUES (105721, md5("empleado105721"), "DNI", 22358180, "Martinez", "Carlos","Av. Alem 3000",54229152423);
+INSERT INTO empleados VALUES (105757, md5("empleado105757"), "DNI", 25865925, "Larreta", "Alberto","Estomba 300",54112524213);
 
 
 INSERT INTO brinda VALUES (1001, 'Lu', "Economica", 1000.00, 60);
