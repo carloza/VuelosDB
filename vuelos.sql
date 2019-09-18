@@ -11,7 +11,7 @@ CREATE TABLE ubicaciones (
 	pais VARCHAR(45) NOT NULL,
 	estado VARCHAR(45) NOT NULL,
 	ciudad VARCHAR(45) NOT NULL,
-	huso SMALLINT UNSIGNED NOT NULL,
+	huso SMALLINT NOT NULL,
 	CHECK(huso>=-12), CHECK(huso<=12),
 	
 	CONSTRAINT pk_ubicaciones PRIMARY KEY (pais, estado, ciudad)
@@ -185,7 +185,7 @@ CREATE TABLE reserva_vuelo_clase (
 #
 
 	CREATE VIEW vuelos_disponibles AS
-	SELECT
+	SELECT DISTINCT
 		s.vuelo,
 		s.modelo_avion,
 		s.hora_sale,
@@ -194,30 +194,31 @@ CREATE TABLE reserva_vuelo_clase (
 		iv.fecha,
 		TIMEDIFF(s.hora_llega, s.hora_sale) AS tiempo_estimado,
 		vp.aeropuerto_salida,
-		ae_s.nombre,
-		ae_s.ciudad,
-		ae_s.estado,
-		ae_s.pais,
+		ae_s.nombre AS nombre_ap_salida,
+		ae_s.ciudad AS ciudad_ap_salida,
+		ae_s.estado AS estado_ap_salida,
+		ae_s.pais AS pais_ap_salida,
 		vp.aeropuerto_llegada,
-		ae_ll.nombre,
-		ae_ll.ciudad,
-		ae_ll.estado,
-		ae_ll.pais,
+		ae_ll.nombre AS nombre_ap_llegada,
+		ae_ll.ciudad AS ciudad_ap_llegada,
+		ae_ll.estado AS estado_ap_llegada,
+		ae_ll.pais AS pais_ap_llegada,
 		b.precio,
 		b.clase,
-		TRUCATE((b.cant_asientos * (1 + c.porcentaje)- (SELECT
+		FLOOR(	(b.cant_asientos * (1 + c.porcentaje)- (  SELECT
 															COUNT(*) 
 														FROM 
 															reserva_vuelo_clase
 														WHERE
 															(reserva_vuelo_clase.vuelo = b.vuelo) AND
-															(reserva_vuelo_clase.clase = b.clase)
+															(reserva_vuelo_clase.clase = b.clase) AND
+															(reserva_vuelo_clase.fecha_vuelo = iv.fecha)
 														)
 				)
-			,0) AS asientos_disponibles
+			) AS asientos_disponibles
 	FROM
 		instancias_vuelo AS iv,
-		salida AS s,
+		salidas AS s,
 		vuelos_programados AS vp,
 		aeropuertos AS ae_s,
 		aeropuertos AS ae_ll,
