@@ -164,23 +164,6 @@ CREATE TABLE reserva_vuelo_clase (
 
 
 #-------------------------------------------------------------------------
-# Creación de vistas 
-#	
-#	
-#	CREATE VIEW vuelos_disponibles AS 
-#	SELECT DISTINCT
-#	v_p.numero, i_v.fecha AS fecha_vuelo, i_v.dia AS dia_vuelo, 
-#	s.hora_sale, s.hora_llega, TIMEDIFF(s.hora_llega,s.hora_sale) AS tiempo_vuelo_estimado,
-#	v_p.aeropuerto_salida, a_s.nombre AS nombre_ap_salida,a_s.ciudad AS 	ciudad_salida,a_s.estado AS estado_salida,a_s.pais AS pais_salida, 
-#	v_p.aeropuerto_llegada,a_l.nombre AS nombre_ap_llegada,a_l.ciudad AS ciudad_llegada,a_l.estado AS estado_llegada,a_l.pais AS pais_llegada,
-#	b.clase as clase, b.precio as precio_pasaje, 
-#	(m_a.cant_asientos + (m_a.cant_asientos * c.porcentaje)) - (select count(clase) from reserva_vuelo_clase as r_v_c_2 where (r_v_c_2.vuelo = v_p.numero)) as cant_calculada
-#  
-#	FROM 
-#	((((((((vuelos_programados as v_p JOIN aeropuertos as a_s ON v_p.aeropuerto_salida = a_s.codigo) JOIN aeropuertos as a_l ON v_p.aeropuerto_llegada = a_l.codigo) JOIN salidas as s ON v_p.numero = s.vuelo) JOIN instancias_vuelo as i_v ON v_p.numero = i_v.vuelo) JOIN brinda as b ON v_p.numero = b.vuelo) JOIN reserva_vuelo_clase as r_v_c ON (i_v.vuelo = r_v_c.vuelo) and (r_v_c.clase = b.clase)) JOIN modelos_avion as m_a on m_a.modelo = s.modelo_avion) JOIN clases as c on c.nombre = r_v_c.clase);
-
-
-#-------------------------------------------------------------------------
 # Nueva vista -->>sin join y un poco mas organizada (ponele)
 #
 
