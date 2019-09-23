@@ -51,7 +51,7 @@ CREATE TABLE modelos_avion (
 
 CREATE TABLE salidas (
 	vuelo VARCHAR(45) NOT NULL,
-	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
+	dia enum('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'),
 	hora_sale TIME NOT NULL,
 	hora_llega TIME NOT NULL,
 	modelo_avion VARCHAR(45) NOT NULL,
@@ -64,8 +64,8 @@ CREATE TABLE salidas (
 CREATE TABLE instancias_vuelo(
 	vuelo VARCHAR(45) NOT NULL,
 	fecha DATE NOT NULL,
-	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
-	estado VARCHAR(45) NOT NULL,
+	dia enum('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa') NOT NULL,
+	estado VARCHAR(45),
 
 	CONSTRAINT pk_instacias_vuelo PRIMARY KEY (vuelo, fecha),
 	CONSTRAINT fk_vuelo_dia_instancia_vuelo FOREIGN KEY (vuelo, dia) REFERENCES salidas(vuelo, dia)
@@ -73,7 +73,7 @@ CREATE TABLE instancias_vuelo(
 
 CREATE TABLE clases (
 	nombre VARCHAR(45) NOT NULL,
-	porcentaje DECIMAL(2,2) NOT NULL,
+	porcentaje DECIMAL(2,2) UNSIGNED NOT NULL
 	CHECK(porcentaje >= 0.00), CHECK(porcentaje <= 0.99),
 
 	CONSTRAINT pk_clases PRIMARY KEY (nombre)
@@ -81,7 +81,7 @@ CREATE TABLE clases (
 
 CREATE TABLE comodidades (
 	codigo INT UNSIGNED NOT NULL,
-	descripcion VARCHAR(45) NOT NULL,
+	descripcion TEXT NOT NULL,
 
 	CONSTRAINT pk_comodidades PRIMARY KEY (codigo)
 )ENGINE = InnoDB;
@@ -112,7 +112,7 @@ CREATE TABLE empleados (
 )ENGINE = InnoDB;
 
 CREATE TABLE reservas(
-	numero INT UNSIGNED NOT NULL,
+	numero INT UNSIGNED AUTO_INCREMENT,
 	fecha DATE NOT NULL,
 	vencimiento DATE NOT NULL,
 	estado VARCHAR(45) NOT NULL,
@@ -131,9 +131,9 @@ CREATE TABLE reservas(
 
 CREATE TABLE brinda(
 	vuelo VARCHAR(45) NOT NULL,
-	dia VARCHAR(2) NOT NULL CHECK (dia IN ('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa')),
+	dia enum('Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'),
 	clase VARCHAR(45) NOT NULL,
-	precio DECIMAL(7,2) NOT NULL,
+	precio DECIMAL(7,2) UNSIGNED NOT NULL,
 	cant_asientos SMALLINT UNSIGNED NOT NULL,
 
 	CONSTRAINT pk_brinda PRIMARY KEY (vuelo, dia, clase),

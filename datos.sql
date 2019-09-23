@@ -48,7 +48,7 @@ INSERT INTO salidas VALUES ("2001", 'Lu', '11:00:00', '13:00:00',"190");
 INSERT INTO salidas VALUES ("3999", 'Mi', '07:00:00', '16:00:00',"777");
 INSERT INTO salidas VALUES ("4951", 'Vi', '10:00:00', '18:20:00',"A330");
 INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717");
-INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717");
+INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717"); #PRUEBAERROR
 INSERT INTO salidas VALUES ("7051", 'Ma', '06:00:00', '07:00:00',"CRJ700");
 
 INSERT INTO instancias_vuelo VALUES ("1001", "2019/09/16", 'Lu', "A tiempo");
@@ -59,7 +59,7 @@ INSERT INTO instancias_vuelo VALUES ("1002", "2019/12/29", 'Do', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "Cancelado");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/09", 'Lu', "Cancelado");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/23", 'Lu', "Cancelado");
-INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "A tiempo");
+INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "A tiempo"); #PRUEBAERROR
 INSERT INTO instancias_vuelo VALUES ("3999", "2019/12/18", 'Mi', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("3999", "2019/12/26", 'Mi', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("3999", "2019/12/11", 'Mi', "A tiempo");
