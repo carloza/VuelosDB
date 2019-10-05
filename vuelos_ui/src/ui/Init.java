@@ -80,7 +80,7 @@ public class Init extends JFrame {
 	}
 	
 	public static void main (String [] Args)  {
-		Init ui = new Init();
+		Init ui = new Init();		
 	}
 	
 	public void set_mode(int mode) {
@@ -109,6 +109,8 @@ public class Init extends JFrame {
 		if(modo_seleccionado == ADMIN && correcta) {
 			try {
 				vuelos_db.connection_Vuelos_DB(jtf_user.getText(), pw_string);
+				Admin ad = new Admin();
+				this.dispose();
 			} catch (SQLException e) {
 				label_helptxt.setText("Usuario o contraseña invalida, reingrese");
 				label_helptxt.setForeground(Color.red);
