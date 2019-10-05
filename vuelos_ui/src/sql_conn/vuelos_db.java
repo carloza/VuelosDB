@@ -6,16 +6,12 @@ public class vuelos_db {
 
 	public static Connection vuelos_db_connection;
 	
-	public static void connection_Vuelos_DB(String user, String password) {
+	public static void connection_Vuelos_DB(String user, String password) throws SQLException {
 		String servidor = "localhost:3306";
 		String database = "vuelos";
 		String url = "jdbc:mysql://"+servidor+"/"+database+"?serverTimezone=UTC";
-		try {
-			vuelos_db_connection = java.sql.DriverManager.getConnection(url,user,password);
-			System.out.println("Conexion establecida");
-		} catch (SQLException e) {
-			System.out.println("Error al establecer coneccion con BD: " + e.getMessage());
-		} 
+		vuelos_db_connection = java.sql.DriverManager.getConnection(url,user,password);
+		System.out.println("Conexion establecida");
 	}
 
 	public static Connection get_Connection_Vuelos_DB() {

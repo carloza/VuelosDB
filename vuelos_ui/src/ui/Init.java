@@ -104,40 +104,54 @@ public class Init extends JFrame {
 		if (correcta) 
 			pw_string = new String(pw);
 		else 
-			System.out.println("Contraseña invalida");
+			label_helptxt.setText("Reingrese una contraseña valida");
 		
 		if(modo_seleccionado == ADMIN && correcta) {
-			vuelos_db.connection_Vuelos_DB(jtf_user.getText(), pw_string);
-		} else if (modo_seleccionado == EMPLEADO && correcta) {
-			vuelos_db.connection_Vuelos_DB("empleado", "empleado");
-			java.sql.Statement stmt;
 			try {
-				stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
-				String sql = "SELECT legajo, password FROM empleados";
-				java.sql.ResultSet rs = stmt.executeQuery(sql);
-				boolean encontro = false;
-				while(rs.next()) {
-					String legajo = rs.getString("legajo");
-					String password = rs.getString("password");
-					if (legajo.equals(jtf_user.getText()) && password.equals(MD5.getMd5(pw_string))) {
-						encontro = true;
-						break;
-					}
-				}
-				if (!encontro) {
-					vuelos_db.close_Connection();
-					System.out.println("Usuario/contraseña incorrectos");
-				} else { 
-					System.out.println("Usuario/contraseña correctos, ingresando sistema...");
-				}
-				rs.close();
-				stmt.close();
-				
+				vuelos_db.connection_Vuelos_DB(jtf_user.getText(), pw_string);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				label_helptxt.setText("Usuario o contraseña invalida, reingrese");
+				label_helptxt.setForeground(Color.red);
 			}
-			vuelos_db.close_Connection();
+			
+		} else if (modo_seleccionado == EMPLEADO && correcta) {
+			try{
+				vuelos_db.connection_Vuelos_DB("empleado", "empleado");
+				java.sql.Statement stmt;
+				try {
+					stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+					String sql = "SELECT legajo, password FROM empleados";
+					java.sql.ResultSet rs = stmt.executeQuery(sql);
+					boolean encontro = false;
+					while(rs.next()) {
+						String legajo = rs.getString("legajo");
+						String password = rs.getString("password");
+						if (legajo.equals(jtf_user.getText()) && password.equals(MD5.getMd5(pw_string))) {
+							encontro = true;
+							break;
+						}
+					}
+					if (!encontro) {
+						vuelos_db.close_Connection();
+						label_helptxt.setText("Nro de legajo o contraseña incorrectos");
+						label_helptxt.setForeground(Color.red);
+					} else { 
+						label_helptxt.setText("Conectado");
+						label_helptxt.setForeground(Color.black);
+
+					}
+					rs.close();
+					stmt.close();
+					
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				vuelos_db.close_Connection();
+			}catch (SQLException e) {
+				System.out.println("Erro al conectar con BD");
+			}
+		
 			
 		}
 	}
