@@ -152,7 +152,6 @@ public class Consulta {
 		tablaVUELTA = new DBTable();
 		tablaVUELTA.setBounds(12, 277, 772, 157);
 		tablaVUELTA.setEditable(false);
-		tablaVUELTA.setVisible(false);
 		frame.getContentPane().add(tablaVUELTA);
 	}
 	
@@ -176,10 +175,10 @@ public class Consulta {
 	
 	private void inflarUnaTabla(DBTable tabla_db, String query) {
 		try {
-			tablaIDA.setConnection(vuelos_db.get_Connection_Vuelos_DB());
-			tablaIDA.setSelectSql(query);
-			tablaIDA.createColumnModelFromQuery();
-			tablaIDA.refresh();
+			tabla_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
+			tabla_db.setSelectSql(query);
+			tabla_db.createColumnModelFromQuery();
+			tabla_db.refresh();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
