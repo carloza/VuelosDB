@@ -7,6 +7,7 @@ import javax.swing.text.JTextComponent;
 
 import other.MD5;
 import sql_conn.vuelos_db;
+import ui.ui_empleado.Consulta;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -104,7 +105,7 @@ public class Init extends JFrame {
 		if (correcta) 
 			pw_string = new String(pw);
 		else 
-			label_helptxt.setText("Reingrese una contraseña valida");
+			label_helptxt.setText("Reingrese una contraseï¿½a valida");
 		
 		if(modo_seleccionado == ADMIN && correcta) {
 			try {
@@ -112,7 +113,7 @@ public class Init extends JFrame {
 				Admin ad = new Admin();
 				this.dispose();
 			} catch (SQLException e) {
-				label_helptxt.setText("Usuario o contraseña invalida, reingrese");
+				label_helptxt.setText("Usuario o contraseï¿½a invalida, reingrese");
 				label_helptxt.setForeground(Color.red);
 			}
 			
@@ -135,12 +136,13 @@ public class Init extends JFrame {
 					}
 					if (!encontro) {
 						vuelos_db.close_Connection();
-						label_helptxt.setText("Nro de legajo o contraseña incorrectos");
+						label_helptxt.setText("Nro de legajo o contraseï¿½a incorrectos");
 						label_helptxt.setForeground(Color.red);
 					} else { 
 						label_helptxt.setText("Conectado");
 						label_helptxt.setForeground(Color.black);
-
+						Consulta.Iniciar();
+						this.dispose();
 					}
 					rs.close();
 					stmt.close();
@@ -149,7 +151,7 @@ public class Init extends JFrame {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				vuelos_db.close_Connection();
+				//vuelos_db.close_Connection();
 			}catch (SQLException e) {
 				System.out.println("Erro al conectar con BD");
 			}
