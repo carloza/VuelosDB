@@ -9,19 +9,11 @@ public class vuelos_db {
 	public static void connection_Vuelos_DB(String user, String password) throws SQLException {
 		String servidor = "localhost:3306";
 		String database = "vuelos";
-		String url = "jdbc:mysql://"+servidor+"/"+database+"?serverTimezone=UTC";
+		String url = "jdbc:mysql://"+servidor+"/"+database+"?serverTimezone=America/Buenos_Aires";
 		vuelos_db_connection = java.sql.DriverManager.getConnection(url,user,password);
 		System.out.println("Conexion establecida");
 	}
 	
-	public static void g(String user, String password) throws SQLException {
-		String servidor = "localhost:3306";
-		String database = "vuelos";
-		String url = "jdbc:mysql://"+servidor+"/"+database+"?serverTimezone=UTC";
-		vuelos_db_connection = java.sql.DriverManager.getConnection(url,user,password);
-		System.out.println("Conexion establecida");
-	}
-
 	public static Connection get_Connection_Vuelos_DB() {
 		return vuelos_db_connection;
 	}

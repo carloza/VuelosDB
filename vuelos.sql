@@ -234,11 +234,11 @@ CREATE TABLE reserva_vuelo_clase (
 # Permiso para insertar,modificar y actualizar: tablas reservas, pasajeros y reserva_vuelo_clase.
 
 	DROP USER ''@'localhost';
-    CREATE USER 'empleado'@'localhost' IDENTIFIED BY 'empleado'; 
-    GRANT SELECT ON vuelos.* TO 'empleado'@'localhost';
-	GRANT INSERT, DELETE, UPDATE on vuelos.reservas TO 'empleado'@'localhost';
-	GRANT INSERT, DELETE, UPDATE on vuelos.pasajeros TO 'empleado'@'localhost';
-	GRANT INSERT, DELETE, UPDATE on vuelos.reserva_vuelo_clase TO 'empleado'@'localhost';
+    CREATE USER 'empleado'@'%' IDENTIFIED BY 'empleado'; 
+    GRANT SELECT ON vuelos.* TO 'empleado'@'%';
+	GRANT INSERT, DELETE, UPDATE on vuelos.reservas TO 'empleado'@'%';
+	GRANT INSERT, DELETE, UPDATE on vuelos.pasajeros TO 'empleado'@'%';
+	GRANT INSERT, DELETE, UPDATE on vuelos.reserva_vuelo_clase TO 'empleado'@'%';
 
 	
 # Usuario: cliente

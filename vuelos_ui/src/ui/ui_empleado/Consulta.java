@@ -15,19 +15,14 @@ import sql_conn.vuelos_db;
 
 import javax.swing.JComboBox;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JTable;
 
 import quick.dbtable.DBTable;
 
@@ -76,8 +71,6 @@ public class Consulta {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-//		Connection conexionDB = vuelos_db.get_Connection_Vuelos_DB();
-//		Statement stmt;
 		
 		ubicaciones = new ArrayList<Ubicacion>();
 		
@@ -130,7 +123,6 @@ public class Consulta {
 				comboBox_1.addItem(u.toString());
 			}
 		} catch (SQLException e) {
-//			e.printStackTrace();
 			JOptionPane.showMessageDialog(frame,
                     "Se produjo un error al intentar conectarse a la base de datos.\n",
                     "No se pueden cargar ciudades",
@@ -159,24 +151,18 @@ public class Consulta {
 		tablaVUELTA = new DBTable();
 		tablaVUELTA.setBounds(12, 277, 772, 157);
 		tablaVUELTA.setEditable(false);
-		tablaIDA.addMouseListener(new TablaListener(tablaVUELTA));
+		tablaVUELTA.addMouseListener(new TablaListener(tablaVUELTA));
 		frame.getContentPane().add(tablaVUELTA);
 	}
 	
 	private void rowSeleccionada(DBTable tabla) {
 		try {
+			if (tabla == null)
+				System.out.println("si es nula");
+
 			String vuelo = tabla.getValueAt(tabla.getSelectedRow(), 0).toString();
 			String fecha = tabla.getValueAt(tabla.getSelectedRow(), 1).toString();
-			
-			//hago todo este lio xq retorna un dia menos que el almacenado en bd
-			//https://stackoverflow.com/questions/428918/how-can-i-increment-a-date-by-one-day-in-java
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			Calendar c = Calendar.getInstance();
-			c.setTime(sdf.parse(fecha));
-			c.add(Calendar.DATE, 1);  // number of days to add
-			fecha = sdf.format(c.getTime());  // dt is now the new date
-			//aca termina el lio
-			
+
 			String query = "SELECT DISTINCT vd.fecha,vd.clase, vd.precio, vd.asientos_disponibles "
 						 + "FROM vuelos.vuelos_disponibles AS vd "
 						 + "WHERE (vd.vuelo = "+vuelo+") AND (vd.fecha = '"+fecha+"');";
@@ -194,12 +180,10 @@ public class Consulta {
                     disponibles,
                     "Vuelos para "+fecha,
                     JOptionPane.INFORMATION_MESSAGE);
-//			System.out.println(disponibles);
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+			System.out.println("entro aca");
+		} 
 		
 	}
 	
@@ -236,7 +220,6 @@ public class Consulta {
 	          }
 			tabla_db.refresh();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -252,7 +235,6 @@ public class Consulta {
 					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
 					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
 					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
-//		System.out.println(s);
 		return s;
 	}
 	
@@ -261,31 +243,25 @@ public class Consulta {
 		private DBTable tablaLocal;
 		
 		public TablaListener(DBTable tablaLocal) {
-			tablaLocal = this.tablaLocal;
+			this.tablaLocal = tablaLocal;
 		}
 
-		@Override
 		public void mouseClicked(MouseEvent arg0) {
 			rowSeleccionada(tablaLocal);
 		}
 
-		@Override
 		public void mouseEntered(MouseEvent arg0) {}
 
-		@Override
 		public void mouseExited(MouseEvent arg0) {}
 
-		@Override
 		public void mousePressed(MouseEvent arg0) {}
 
-		@Override
 		public void mouseReleased(MouseEvent arg0) {}
 		
 	}
 	
 	private class Boton_ver_listener implements ActionListener {
 
-		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			inflarTablas();
 		}

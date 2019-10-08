@@ -7,6 +7,7 @@ import javax.swing.text.JTextComponent;
 
 import other.MD5;
 import sql_conn.vuelos_db;
+import ui.ui_admin.Admin;
 import ui.ui_empleado.Consulta;
 
 import java.awt.*;
@@ -151,9 +152,8 @@ public class Init extends JFrame {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				//vuelos_db.close_Connection();
 			}catch (SQLException e) {
-				System.out.println("Erro al conectar con BD");
+				label_helptxt.setText("Error al conectar con la BD");
 			}
 		
 			
