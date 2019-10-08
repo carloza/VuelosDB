@@ -37,12 +37,17 @@ public class Consulta {
 	private JComboBox<String> comboBox;
 	private JLabel lblCiudadDestino;
 	private JComboBox<String> comboBox_1;
+	private JLabel lblFechaIda;
+	private JComboBox<String> comboBoxFechaIda;
+	private JLabel lblFechaVuelta;
+	private JComboBox<String> comboBoxFechaVuelta;
 	private JButton btnVer;
 	private JLabel lblVuelosDeIda;
 	private DBTable tablaIDA;
 	private JLabel lblVuelosDeVuelta;
 	private DBTable tablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
+	private ArrayList<String> FechasIda;
 
 	/**
 	 * Launch the application.
@@ -75,9 +80,10 @@ public class Consulta {
 		ubicaciones = new ArrayList<Ubicacion>();
 		
 		frame = new JFrame("Consulta");
-		frame.setBounds(100, 100, 800, 500);
+		frame.setBounds(100, 100, 800, 510);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
+		frame.setResizable(false);
 		
 		lblSeleccioneElTipo = new JLabel("Seleccione el tipo de vuelo");
 		lblSeleccioneElTipo.setBounds(12, 12, 248, 15);
@@ -102,14 +108,18 @@ public class Consulta {
 
 		comboBox = new JComboBox<String>();
 		comboBox.setBounds(270, 27, 248, 23);
+		//comboBox.addActionListener(new CheckBoxListener());
+		comboBox.addMouseListener(new CheckBoxListener());
 		frame.getContentPane().add(comboBox);
 		
 		lblCiudadDestino = new JLabel("Ciudad Destino");
-		lblCiudadDestino.setBounds(536, 12, 248, 15);
+		lblCiudadDestino.setBounds(270, 50, 248, 15);
 		frame.getContentPane().add(lblCiudadDestino);
 		
 		comboBox_1 = new JComboBox<String>();
-		comboBox_1.setBounds(536, 27, 248, 23);
+		comboBox_1.setBounds(270, 65, 248, 23);
+		comboBox_1.addMouseListener(new CheckBoxListener());
+		//comboBox.addActionListener(new CheckBoxListener());
 		frame.getContentPane().add(comboBox_1);
 
 		try {
@@ -128,28 +138,47 @@ public class Consulta {
                     "No se pueden cargar ciudades",
                     JOptionPane.ERROR_MESSAGE);
 		}
+		
+		lblFechaIda = new JLabel("Fecha Ida");
+		lblFechaIda.setBounds(536, 12, 248, 15);
+		frame.getContentPane().add(lblFechaIda);
+		
+		comboBoxFechaIda = new JComboBox<String>();
+		comboBoxFechaIda.setBounds(536, 27, 248, 23);
+		comboBoxFechaIda.setEnabled(false);
+		frame.getContentPane().add(comboBoxFechaIda);
+		
+		lblFechaVuelta = new JLabel("Fecha Vuelta");
+		lblFechaVuelta.setBounds(536, 50, 248, 15);
+		frame.getContentPane().add(lblFechaVuelta);
+		
+		comboBoxFechaVuelta = new JComboBox<String>();
+		comboBoxFechaVuelta.setBounds(536, 65, 248, 23);
+		comboBoxFechaVuelta.setEnabled(false);
+		frame.getContentPane().add(comboBoxFechaVuelta);
+		
 		btnVer = new JButton("Ver");
-		btnVer.setBounds(670, 59, 114, 25);
+		btnVer.setBounds(670, 99, 114, 25);
 		btnVer.addActionListener(new Boton_ver_listener());
 		frame.getContentPane().add(btnVer);
 		
 		lblVuelosDeIda = new JLabel("Vuelos de ida");
-		lblVuelosDeIda.setBounds(12, 80, 139, 15);
+		lblVuelosDeIda.setBounds(12, 115, 139, 15);
 		frame.getContentPane().add(lblVuelosDeIda);
 		
 		tablaIDA = new DBTable();
-		tablaIDA.setBounds(12, 94, 772, 340);
+		tablaIDA.setBounds(12, 129, 772, 340);
 		tablaIDA.setEditable(false);
 		tablaIDA.addMouseListener(new TablaListener(tablaIDA));
 		frame.getContentPane().add(tablaIDA);
 		
 		lblVuelosDeVuelta = new JLabel("Vuelos de vuelta");
-		lblVuelosDeVuelta.setBounds(12, 263, 139, 15);
+		lblVuelosDeVuelta.setBounds(12, 298, 139, 15);
 		lblVuelosDeVuelta.setVisible(false);
 		frame.getContentPane().add(lblVuelosDeVuelta);
 		
 		tablaVUELTA = new DBTable();
-		tablaVUELTA.setBounds(12, 277, 772, 157);
+		tablaVUELTA.setBounds(12, 312, 772, 157);
 		tablaVUELTA.setEditable(false);
 		tablaVUELTA.addMouseListener(new TablaListener(tablaVUELTA));
 		frame.getContentPane().add(tablaVUELTA);
@@ -189,14 +218,14 @@ public class Consulta {
 	
 	private void inflarTablas() {
 		boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
-		tablaIDA.setBounds(12, 94, 772, 340);
+		tablaIDA.setBounds(12, 129, 772, 340);
 		lblVuelosDeVuelta.setVisible(false);
 		tablaVUELTA.setVisible(false);
 		Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
 		Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
 		String queryIda = generarQuery(origen, destino);
 		if(idayvuelta) {
-			tablaIDA.setBounds(12, 94, 772, 157);
+			tablaIDA.setBounds(12, 129, 772, 157);
 			lblVuelosDeVuelta.setVisible(true);
 			tablaVUELTA.setVisible(true);
 			String queryVuelta = generarQuery(destino, origen);
@@ -236,6 +265,69 @@ public class Consulta {
 					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
 					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
 		return s;
+	}
+	
+	private String generarQueryFecha(Ubicacion origen, Ubicacion destino) {
+		String s = "select distinct "
+				+ "vd.fecha"
+				+ "from vuelos_disponibles as vd "
+				+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
+					+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
+					+ "(vd.pais_ap_salida = '"+origen.getPais()+"') and "
+					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
+					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
+					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
+		return s;
+	}
+	
+	private class CheckBoxListener implements MouseListener{
+
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			try {
+				Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
+				Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
+				String query = generarQueryFecha(origen, destino);
+				Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+				ResultSet rs = stmt.executeQuery(query);
+				while(rs.next()) {
+					String f = rs.getString("ciudad");
+					FechasIda.add(f);
+					comboBoxFechaIda.addItem(f);
+				}
+				comboBoxFechaIda.setEnabled(true);
+			} catch (SQLException e) {
+				JOptionPane.showMessageDialog(frame,
+	                    "Se produjo un error al intentar conectarse a la base de datos.\n",
+	                    "No se pueden cargar ciudades",
+	                    JOptionPane.ERROR_MESSAGE);
+			}
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 	
 	private class TablaListener implements MouseListener{
