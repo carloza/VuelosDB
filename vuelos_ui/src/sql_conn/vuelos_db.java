@@ -1,6 +1,7 @@
 package sql_conn;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class vuelos_db {
 
@@ -11,7 +12,6 @@ public class vuelos_db {
 		String database = "vuelos";
 		String url = "jdbc:mysql://"+servidor+"/"+database+"?serverTimezone=America/Buenos_Aires";
 		vuelos_db_connection = java.sql.DriverManager.getConnection(url,user,password);
-		System.out.println("Conexion establecida");
 	}
 	
 	public static Connection get_Connection_Vuelos_DB() {
@@ -23,7 +23,6 @@ public class vuelos_db {
 			try {
 				vuelos_db_connection.close();
 				vuelos_db_connection = null;
-				System.out.println("Conexion finalizada");
 			} catch (SQLException e) {
 				System.out.println("Error al finalizar conexion:" + e.getMessage());
 			}

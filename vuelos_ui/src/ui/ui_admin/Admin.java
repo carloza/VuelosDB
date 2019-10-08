@@ -1,5 +1,6 @@
 package ui.ui_admin;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -11,6 +12,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,19 +26,20 @@ import javax.swing.event.ListSelectionListener;
 import quick.dbtable.*;
 import sql_conn.vuelos_db;
 
-
 public class Admin extends JFrame {
 
+
+	private static final long serialVersionUID = 1L;
 	private JLabel label_info,label_dbs,label_cols;
 	private JTextArea jta_stmt;
 	private DBTable table_db;
 	private JButton btn_exec, btn_remove;
 	private JScrollPane jsp_jltable, jsp_jlcolumns;
-	private JList<String> jl_tables, jl_columns;
+	private JList<String> jl_tables;
 	
 	public Admin () {
 		
-		super("Administrador");
+		super("Administrador - Vuelos UI");
 		this.setSize(1100,550);
 		this.setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -45,6 +48,7 @@ public class Admin extends JFrame {
 		this.setLayout(null);
 		
 		String[] tables_array = null;
+		
 		//Get tables of db
 		try {
 			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
@@ -60,7 +64,7 @@ public class Admin extends JFrame {
 		}
 		
 		//Creation of graphics objects
-		label_info = new JLabel("Ingrese consulta SQL y presione ejecutar: ");
+		label_info = new JLabel("Ingrese una consulta SQL y presione ejecutar: ");
 		label_dbs = new JLabel("Seleccione una tabla para ver sus atributos: ");
 		label_cols = new JLabel();
 		jta_stmt = new JTextArea();
@@ -68,13 +72,11 @@ public class Admin extends JFrame {
 		btn_remove = new JButton("Borrar");
 		table_db = new DBTable();
 		jl_tables = new JList<String>(tables_array);
-		jl_columns = new JList<String>();
 		jsp_jltable = new JScrollPane();
 		jsp_jlcolumns = new JScrollPane();
-
 		
 		//Parameters of the graphics objects
-		label_info.setLocation(0,0);
+		label_info.setLocation(8,0);
 		label_info.setSize(800,30);
 		
 		label_dbs.setLocation(800,0);
@@ -82,16 +84,17 @@ public class Admin extends JFrame {
 		
 		label_cols.setLocation(800,230);
 		label_cols.setSize(300,30);
+		label_cols.setText("Atributos asociados");
 		
 		jta_stmt.setTabSize(4);
 		jta_stmt.setColumns(100);
-		jta_stmt.setSize(800,150);
-		jta_stmt.setLocation(0, 30);
+		jta_stmt.setSize(796,151);
+		jta_stmt.setLocation(1, 30);
+		jta_stmt.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.lightGray));
 		
 		table_db.setEditable(false);
-		table_db.setSize(800,370);
+		table_db.setSize(800,340);
 		table_db.setLocation(0,180);
-		table_db.setVisible(false);
 	
 		btn_exec.setSize(100,20);
 		btn_exec.setLocation(850, 480);
@@ -101,12 +104,15 @@ public class Admin extends JFrame {
 		btn_remove.setLocation(950, 480);
 		btn_remove.addActionListener(new listener_remove(jta_stmt));
 		
+		
+		
 		jl_tables.addListSelectionListener(new ListSelectionListener() {
 
             @Override
             public void valueChanged(ListSelectionEvent arg0) {
                 if (!arg0.getValueIsAdjusting()) {
                   String selected_db = jl_tables.getSelectedValue().toString();
+                 
                   String[] columns_array = null;
                   ArrayList<String> tmp_list = new ArrayList<String>();
                   try {
@@ -115,10 +121,21 @@ public class Admin extends JFrame {
           			while (rs.next()) 
           				tmp_list.add(rs.getString("Field"));
           			columns_array = tmp_list.toArray(new String[tmp_list.size()]);
-          			jsp_jlcolumns.setViewportView(new JList<String>(columns_array));
+          			JList<String> jlcolumns = new JList<String>(columns_array);
+          			jlcolumns.addListSelectionListener(new ListSelectionListener() {
+          	            public void valueChanged(ListSelectionEvent arg0) {
+          	                if (!arg0.getValueIsAdjusting()) {
+          	                	String selected_column = jlcolumns.getSelectedValue().toString();
+	      	          			exec_query("select distinct " + selected_column +" from "+ selected_db);             	  
+          	                }
+          	            }
+          	        });
+          			
+          			jsp_jlcolumns.setViewportView(jlcolumns);
           			label_cols.setText("Atributos asociados a la tabla " + selected_db + ":");
           			jsp_jlcolumns.setVisible(true);
           			stmt.close();          			
+          			 exec_query("select * from " + selected_db);
           		} catch (SQLException e) {
           			e.printStackTrace();
           		}
@@ -133,7 +150,6 @@ public class Admin extends JFrame {
 		
 		jsp_jlcolumns.setLocation(800, 260);
 		jsp_jlcolumns.setSize(290, 200);
-		jsp_jlcolumns.setVisible(false);
 		
 		//Add graphic objects 
 		this.add(label_info);
@@ -147,22 +163,23 @@ public class Admin extends JFrame {
 		this.add(jsp_jlcolumns);
 		
 		this.setVisible(true);
+		this.exec_query("SELECT * FROM vuelos_disponibles");
 		this.update(this.getGraphics());
 	}
 
 
-	protected void exec_query() {
+	protected void exec_query(String sql) {
+		if (sql == null)
+			sql = this.jta_stmt.getText().trim();
+		Connection conn = vuelos_db.get_Connection_Vuelos_DB();
 		 try {    
-			 table_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
 
-			 String sql = this.jta_stmt.getText().trim();
-			 String sentence_type = sql.split(" ")[0].toLowerCase();
-			 
+			  String sentence_type = sql.split(" ")[0].toLowerCase();
 			 //Si es una consulta retorno muestro el resultado en la interfaz
-			 if(sentence_type.equals("select")) {
-				 table_db.setSelectSql(this.jta_stmt.getText().trim());
-					
-		    	 table_db.createColumnModelFromQuery();    	    
+			 if(sentence_type.equals("select") || sentence_type.equals("show")) {
+				  table_db.setConnection(conn);
+				  table_db.setSelectSql(sql);
+		    	  table_db.createColumnModelFromQuery();    	    
 		    	  for (int i = 0; i < table_db.getColumnCount(); i++) { // para que muestre correctamente los valores de tipo TIME (hora)  		   		  
 		    		 if	 (table_db.getColumn(i).getType()==Types.TIME){    		 
 		    			 table_db.getColumn(i).setType(Types.CHAR);  
@@ -171,25 +188,22 @@ public class Admin extends JFrame {
 		    			 table_db.getColumn(i).setDateFormat("dd/MM/YYYY");
 		    		 }
 		          }  
-		    	  table_db.refresh();	  
+		    	  table_db.refresh();
 		    	  table_db.setVisible(true);
 			 } else {
-				 //De lo contrario ejecuto la consulta y notifico que finalizo con exito
-				 Connection conn = vuelos_db.get_Connection_Vuelos_DB();
-
+				//De lo contrario ejecuto la consulta y notifico que finalizo con exito
+				 
 				 Statement stmt = conn.createStatement();
 				 stmt.execute(this.jta_stmt.getText().trim());
 				 stmt.close();	
 				 JOptionPane.showMessageDialog(this, "Sentencia SQL ejecutada con exito ", "Consulta finalizada", JOptionPane.INFORMATION_MESSAGE);
 			 }
-			 
-	       }
-	      catch (SQLException e) {
-    		 String error_msg = e.getMessage()
- 					+ "\nSQLState: " + e.getSQLState() 
- 					+ "\nVendorError: " + e.getErrorCode();
-    		 JOptionPane.showMessageDialog(this, error_msg, "Error al realizar consulta", JOptionPane.ERROR_MESSAGE);
-	      }
+		 } catch (SQLException e) {
+			 String error_msg = e.getMessage()
+					+ "\nSQLState: " + e.getSQLState() 
+					+ "\nVendorError: " + e.getErrorCode();
+			 JOptionPane.showMessageDialog(this, error_msg, "Error al realizar consulta", JOptionPane.ERROR_MESSAGE);
+		 }
 	}
 	
 	
@@ -200,7 +214,7 @@ public class Admin extends JFrame {
 			this.adm = adm;
 		}
 		public void actionPerformed(ActionEvent arg0) {
-			adm.exec_query();
+			adm.exec_query(null);
 		}
 		
 		

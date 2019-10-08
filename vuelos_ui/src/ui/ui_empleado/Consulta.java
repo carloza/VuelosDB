@@ -3,8 +3,11 @@ package ui.ui_empleado;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -19,7 +22,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -47,7 +54,8 @@ public class Consulta {
 	private JLabel lblVuelosDeVuelta;
 	private DBTable tablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
-	private ArrayList<String> FechasIda;
+	private ArrayList<Date> FechasIda;
+
 
 	/**
 	 * Launch the application.
@@ -78,6 +86,7 @@ public class Consulta {
 	private void initialize() {
 		
 		ubicaciones = new ArrayList<Ubicacion>();
+		FechasIda = new ArrayList<Date>();
 		
 		frame = new JFrame("Consulta");
 		frame.setBounds(100, 100, 800, 510);
@@ -92,10 +101,14 @@ public class Consulta {
 		rdbtnSoloIda = new JRadioButton("Solo Ida");
 		rdbtnSoloIda.setBounds(12, 30, 248, 23);
 		rdbtnSoloIda.setSelected(true);
+		rdbtnSoloIda.addItemListener(new RadioButtonListener ());
 		frame.getContentPane().add(rdbtnSoloIda);
 		
 		rdbtnIdaYVuelta = new JRadioButton("Ida y vuelta");
 		rdbtnIdaYVuelta.setBounds(12, 49, 248, 23);
+		rdbtnIdaYVuelta.addItemListener(new RadioButtonListener ());
+			
+		
 		frame.getContentPane().add(rdbtnIdaYVuelta);
 		
 		bg = new ButtonGroup();
@@ -108,8 +121,7 @@ public class Consulta {
 
 		comboBox = new JComboBox<String>();
 		comboBox.setBounds(270, 27, 248, 23);
-		//comboBox.addActionListener(new CheckBoxListener());
-		comboBox.addMouseListener(new CheckBoxListener());
+		
 		frame.getContentPane().add(comboBox);
 		
 		lblCiudadDestino = new JLabel("Ciudad Destino");
@@ -118,8 +130,7 @@ public class Consulta {
 		
 		comboBox_1 = new JComboBox<String>();
 		comboBox_1.setBounds(270, 65, 248, 23);
-		comboBox_1.addMouseListener(new CheckBoxListener());
-		//comboBox.addActionListener(new CheckBoxListener());
+
 		frame.getContentPane().add(comboBox_1);
 
 		try {
@@ -132,12 +143,16 @@ public class Consulta {
 				comboBox.addItem(u.toString());
 				comboBox_1.addItem(u.toString());
 			}
+			stmt.close();
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame,
                     "Se produjo un error al intentar conectarse a la base de datos.\n",
                     "No se pueden cargar ciudades",
                     JOptionPane.ERROR_MESSAGE);
 		}
+		comboBox.setSelectedIndex(0);
+		comboBox_1.setSelectedIndex(0);
+		
 		
 		lblFechaIda = new JLabel("Fecha Ida");
 		lblFechaIda.setBounds(536, 12, 248, 15);
@@ -146,6 +161,46 @@ public class Consulta {
 		comboBoxFechaIda = new JComboBox<String>();
 		comboBoxFechaIda.setBounds(536, 27, 248, 23);
 		comboBoxFechaIda.setEnabled(false);
+		
+		comboBoxFechaIda.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent ae) {
+				boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
+				if(!idayvuelta && comboBoxFechaIda.getSelectedIndex() != -1) {
+					btnVer.setEnabled(true);
+				} else {
+					if(comboBoxFechaIda.getSelectedIndex() != -1) {
+						btnVer.setEnabled(false);
+						comboBoxFechaVuelta.removeAllItems();
+						Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
+						Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
+						Date fecha = FechasIda.get(comboBoxFechaIda.getSelectedIndex());
+						comboBoxFechaVuelta.removeAllItems();
+						String query = generarQueryFecha(destino,origen,fecha);
+						SimpleDateFormat form = new SimpleDateFormat("dd/MM/yyyy");
+						try {
+							Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+							ResultSet rs = stmt.executeQuery(query);
+							while(rs.next()) {
+								Date f = rs.getDate("fecha");
+								comboBoxFechaVuelta.addItem(form.format(f));
+							}
+							comboBoxFechaVuelta.setEnabled(true);
+							stmt.close();
+						} catch (SQLException e) {
+						JOptionPane.showMessageDialog(frame,
+			                    e.getMessage(),
+			                    "No se pueden cargar ciudades",
+			                    JOptionPane.ERROR_MESSAGE);
+						}		
+					}
+				}
+				
+							
+			}
+			
+				
+		});
 		frame.getContentPane().add(comboBoxFechaIda);
 		
 		lblFechaVuelta = new JLabel("Fecha Vuelta");
@@ -155,11 +210,27 @@ public class Consulta {
 		comboBoxFechaVuelta = new JComboBox<String>();
 		comboBoxFechaVuelta.setBounds(536, 65, 248, 23);
 		comboBoxFechaVuelta.setEnabled(false);
+		comboBoxFechaVuelta.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent ae) {
+				boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
+				if (idayvuelta && comboBoxFechaVuelta.getSelectedIndex() != -1)
+					btnVer.setEnabled(true);
+							
+			}
+			
+				
+		});
 		frame.getContentPane().add(comboBoxFechaVuelta);
 		
+		comboBox.addActionListener(new ListenerComboBox());
+
+		comboBox_1.addActionListener(new ListenerComboBox());
+
 		btnVer = new JButton("Ver");
 		btnVer.setBounds(670, 99, 114, 25);
 		btnVer.addActionListener(new Boton_ver_listener());
+		btnVer.setEnabled(false);
 		frame.getContentPane().add(btnVer);
 		
 		lblVuelosDeIda = new JLabel("Vuelos de ida");
@@ -223,12 +294,15 @@ public class Consulta {
 		tablaVUELTA.setVisible(false);
 		Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
 		Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
-		String queryIda = generarQuery(origen, destino);
+		Date fecha_ida = FechasIda.get(comboBoxFechaIda.getSelectedIndex());
+		String queryIda = generarQuery(origen, destino,fecha_ida);
 		if(idayvuelta) {
+			Date fecha_vuelta = FechasIda.get(comboBoxFechaVuelta.getSelectedIndex());
+
 			tablaIDA.setBounds(12, 129, 772, 157);
 			lblVuelosDeVuelta.setVisible(true);
 			tablaVUELTA.setVisible(true);
-			String queryVuelta = generarQuery(destino, origen);
+			String queryVuelta = generarQuery(destino, origen,fecha_vuelta);
 			inflarUnaTabla(tablaVUELTA, queryVuelta);
 		}
 		inflarUnaTabla(tablaIDA, queryIda);
@@ -253,80 +327,76 @@ public class Consulta {
 		}
 	}
 	
-	protected String generarQuery(Ubicacion origen, Ubicacion destino) {
+	protected String generarQueryFecha(Ubicacion origen, Ubicacion destino, Date fecha_ida) {
 		String s = "select distinct "
-				+ "vd.vuelo, vd.fecha, vd.nombre_ap_salida, vd.hora_sale, vd.nombre_ap_llegada, "
-				+ "vd.hora_llega, vd.modelo_avion, vd.tiempo_estimado "
-				+ "from vuelos_disponibles as vd "
-				+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
-					+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
+					+ "vd.fecha "
+					+ "from vuelos_disponibles as vd "
+					+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
+						+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
 					+ "(vd.pais_ap_salida = '"+origen.getPais()+"') and "
 					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
 					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
 					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
-		return s;
-	}
-	
-	private String generarQueryFecha(Ubicacion origen, Ubicacion destino) {
-		String s = "select distinct "
-				+ "vd.fecha"
-				+ "from vuelos_disponibles as vd "
-				+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
-					+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
-					+ "(vd.pais_ap_salida = '"+origen.getPais()+"') and "
-					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
-					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
-					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
-		return s;
-	}
-	
-	private class CheckBoxListener implements MouseListener{
+		if (fecha_ida != null)
+			s += " and (DATEDIFF('"+ fecha_ida.toString() + "',vd.fecha) <  0)";
+		
+		System.out.println(s);
 
-		@Override
-		public void mouseClicked(MouseEvent arg0) {
+		return s;
+	}
+	
+	protected String generarQuery(Ubicacion origen, Ubicacion destino, Date fecha_ida) {
+		String s = "select distinct "
+					+ "vd.vuelo, vd.fecha, vd.nombre_ap_salida, vd.hora_sale, vd.nombre_ap_llegada, "
+					+ "vd.hora_llega, vd.modelo_avion, vd.tiempo_estimado "
+					+ "from vuelos_disponibles as vd "
+					+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
+						+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
+					+ "(vd.pais_ap_salida = '"+origen.getPais()+"') and "
+					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
+					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
+					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
+
+		if (fecha_ida != null)
+			s += " and (vd.fecha = '"+ fecha_ida.toString() + "')";
+		System.out.println(s);
+
+		return s;
+	}
+	
+	private class ListenerComboBox implements ActionListener {
+
+		public void actionPerformed(ActionEvent arg0) {
+			btnVer.setEnabled(false);
+			boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
+			if (!idayvuelta)
+				comboBoxFechaVuelta.setEnabled(false);
+			Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
+			Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
+			String query = generarQueryFecha(origen,destino,null);
+			SimpleDateFormat form = new SimpleDateFormat("dd/MM/yyyy");
 			try {
-				Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
-				Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
-				String query = generarQueryFecha(origen, destino);
 				Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
 				ResultSet rs = stmt.executeQuery(query);
+				comboBoxFechaIda.removeAllItems();
+				comboBoxFechaVuelta.removeAllItems();
+				FechasIda = new ArrayList<Date>();
+				
 				while(rs.next()) {
-					String f = rs.getString("ciudad");
+					Date f = rs.getDate("fecha");
 					FechasIda.add(f);
-					comboBoxFechaIda.addItem(f);
+					comboBoxFechaIda.addItem(form.format(f));
 				}
 				comboBoxFechaIda.setEnabled(true);
+				stmt.close();
 			} catch (SQLException e) {
-				JOptionPane.showMessageDialog(frame,
-	                    "Se produjo un error al intentar conectarse a la base de datos.\n",
-	                    "No se pueden cargar ciudades",
-	                    JOptionPane.ERROR_MESSAGE);
-			}
+			JOptionPane.showMessageDialog(frame,
+	                e.getMessage(),
+	                "No se pueden cargar ciudades",
+	                JOptionPane.ERROR_MESSAGE);
+			}					
 		}
-
-		@Override
-		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
+		
 		
 	}
 	
@@ -359,4 +429,17 @@ public class Consulta {
 		}
 
 	}
+	
+	private class RadioButtonListener implements ItemListener{
+
+		public void itemStateChanged(ItemEvent e) {
+		    if (e.getStateChange() == ItemEvent.SELECTED) {
+		        // Your selected code here.
+		    	comboBoxFechaVuelta.setEnabled(false);
+		    	btnVer.setEnabled(false);
+		    }
+		}
+			
+	}
+	
 }

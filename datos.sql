@@ -1,6 +1,8 @@
 #-------------------------------------------------------------------------
 # Carga de datos de Prueba
 
+use vuelos;
+
 INSERT INTO ubicaciones VALUES ("Argentina", "Buenos Aires", "Bahia Blanca", -3);
 INSERT INTO ubicaciones VALUES ("Argentina", "Buenos Aires", "Buenos Aires", -3);
 INSERT INTO ubicaciones VALUES ("Brasil", "Amazonas", "Manaos", -4);
@@ -58,7 +60,7 @@ INSERT INTO instancias_vuelo VALUES ("1002", "2019/12/22", 'Do', "Cancelado");
 INSERT INTO instancias_vuelo VALUES ("1002", "2019/12/29", 'Do', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "Cancelado");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/09", 'Lu', "Cancelado");
-INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/23", 'Lu', "Cancelado");
+INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/23", 'Lu', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("2001", "2019/09/16", 'Lu', "A tiempo"); #PRUEBAERROR
 INSERT INTO instancias_vuelo VALUES ("3999", "2019/12/18", 'Mi', "A tiempo");
 INSERT INTO instancias_vuelo VALUES ("3999", "2019/12/26", 'Mi', "A tiempo");
@@ -90,10 +92,10 @@ INSERT INTO pasajeros VALUES ("DNI", 42000123, "Gonzalez", "Esteban","Av. Gral. 
 INSERT INTO empleados VALUES (105721, md5("empleado105721"), "DNI", 22358180, "Martinez", "Carlos","Av. Alem 3000",54229152423);
 INSERT INTO empleados VALUES (105757, md5("empleado105757"), "DNI", 25865925, "Larreta", "Alberto","Estomba 300",54112524213);
 
-
 INSERT INTO brinda VALUES (1001, 'Lu', "Economica", 1000.00, 60);
 INSERT INTO brinda VALUES (1001, 'Lu', "Economica Plus", 3000.00, 20);
 INSERT INTO brinda VALUES (1001, 'Lu', "Primera", 9000.51, 46);
+INSERT INTO brinda VALUES (2001, 'Lu', "Primera", 59000.51, 100);
 INSERT INTO brinda VALUES (3999, 'Mi', "Economica", 29000.51, 300);
 INSERT INTO brinda VALUES (3999, 'Mi', "Economica Plus", 35000.51, 100);
 INSERT INTO brinda VALUES (3999, 'Mi', "Ejecutiva", 51253.60, 100);
