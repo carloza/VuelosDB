@@ -262,22 +262,26 @@ public class Consulta {
 
 			String vuelo = tabla.getValueAt(tabla.getSelectedRow(), 0).toString();
 			String fecha = tabla.getValueAt(tabla.getSelectedRow(), 1).toString();
-
 			String query = "SELECT DISTINCT vd.fecha,vd.clase, vd.precio, vd.asientos_disponibles "
 						 + "FROM vuelos.vuelos_disponibles AS vd "
 						 + "WHERE (vd.vuelo = "+vuelo+") AND (vd.fecha = '"+fecha+"');";
-			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-			String disponibles = "Para el vuelo "+vuelo+" del dia "+fecha+" ofrece: \n";
-			while(rs.next()) {
-				String clase = rs.getString("clase");
-				String precio = rs.getString("precio");
-				String asientos = rs.getString("asientos_disponibles");
-				String oracion = "La clase "+clase+" cuesta $"+precio+" y quedan "+asientos+" asientos disponibles \n";
-				disponibles = disponibles + oracion;
-			}
+			DBTable tabla_db = new DBTable();
+			tabla_db.setBounds(0, 0, 300, 300);
+			tabla_db.setEditable(false);
+			tabla_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
+			tabla_db.setSelectSql(query);
+			tabla_db.createColumnModelFromQuery();
+			for (int i = 0; i < tabla_db.getColumnCount(); i++) { // para que muestre correctamente los valores de tipo TIME (hora)  		   		  
+	    		 if	 (tabla_db.getColumn(i).getType()==Types.TIME){    		 
+	    			 tabla_db.getColumn(i).setType(Types.CHAR);  
+	  	       	 }
+	    		 if	 (tabla_db.getColumn(i).getType()==Types.DATE){
+	    			 tabla_db.getColumn(i).setDateFormat("dd/MM/YYYY");
+	    		 }
+	          }
+			tabla_db.refresh();
 			JOptionPane.showMessageDialog(frame,
-                    disponibles,
+					tabla_db,
                     "Vuelos para "+fecha,
                     JOptionPane.INFORMATION_MESSAGE);
 		} catch (SQLException e) {
