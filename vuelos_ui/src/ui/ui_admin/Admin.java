@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -19,11 +18,12 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import quick.dbtable.*;
+import other.TuneadaTableModel;
 import sql_conn.vuelos_db;
 
 public class Admin extends JFrame {
@@ -32,7 +32,8 @@ public class Admin extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JLabel label_info,label_dbs,label_cols;
 	private JTextArea jta_stmt;
-	private DBTable table_db;
+	private JTable table_db;
+	private JScrollPane jspTable_db;
 	private JButton btn_exec, btn_remove;
 	private JScrollPane jsp_jltable, jsp_jlcolumns;
 	private JList<String> jl_tables;
@@ -70,7 +71,8 @@ public class Admin extends JFrame {
 		jta_stmt = new JTextArea();
 		btn_exec = new JButton("Ejecutar");
 		btn_remove = new JButton("Borrar");
-		table_db = new DBTable();
+		table_db = new JTable();
+		
 		jl_tables = new JList<String>(tables_array);
 		jsp_jltable = new JScrollPane();
 		jsp_jlcolumns = new JScrollPane();
@@ -91,10 +93,10 @@ public class Admin extends JFrame {
 		jta_stmt.setSize(796,151);
 		jta_stmt.setLocation(1, 30);
 		jta_stmt.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.lightGray));
-		
-		table_db.setEditable(false);
+
 		table_db.setSize(800,340);
-		table_db.setLocation(0,180);
+		jspTable_db = new JScrollPane(table_db);
+		jspTable_db.setBounds(0, 180, 800, 340);
 	
 		btn_exec.setSize(100,20);
 		btn_exec.setLocation(850, 480);
@@ -156,7 +158,7 @@ public class Admin extends JFrame {
 		this.add(label_dbs);
 		this.add(label_cols);
 		this.add(jta_stmt);
-		this.add(table_db);
+		this.add(jspTable_db);
 		this.add(btn_exec);
 		this.add(btn_remove);
 		this.add(jsp_jltable);
@@ -172,38 +174,28 @@ public class Admin extends JFrame {
 		if (sql == null)
 			sql = this.jta_stmt.getText().trim();
 		Connection conn = vuelos_db.get_Connection_Vuelos_DB();
-		 try {    
-
-			  String sentence_type = sql.split(" ")[0].toLowerCase();
-			 //Si es una consulta retorno muestro el resultado en la interfaz
-			 if(sentence_type.equals("select") || sentence_type.equals("show")) {
-				  table_db.setConnection(conn);
-				  table_db.setSelectSql(sql);
-		    	  table_db.createColumnModelFromQuery();    	    
-		    	  for (int i = 0; i < table_db.getColumnCount(); i++) { // para que muestre correctamente los valores de tipo TIME (hora)  		   		  
-		    		 if	 (table_db.getColumn(i).getType()==Types.TIME){    		 
-		    			 table_db.getColumn(i).setType(Types.CHAR);  
-		  	       	 }
-		    		 if	 (table_db.getColumn(i).getType()==Types.DATE){
-		    			 table_db.getColumn(i).setDateFormat("dd/MM/YYYY");
-		    		 }
-		          }  
-		    	  table_db.refresh();
-		    	  table_db.setVisible(true);
-			 } else {
+		try {
+			String sentence_type = sql.split(" ")[0].toLowerCase();
+			Statement stmt = conn.createStatement();
+			//Si es una consulta retorno muestro el resultado en la interfaz
+			if(sentence_type.equals("select") || sentence_type.equals("show")) {
+				ResultSet rs = stmt.executeQuery(sql);
+				table_db.setModel(new TuneadaTableModel(rs));
+				table_db.setVisible(true);
+				jspTable_db.setVisible(true);
+				table_db.repaint();
+			} else {
 				//De lo contrario ejecuto la consulta y notifico que finalizo con exito
-				 
-				 Statement stmt = conn.createStatement();
-				 stmt.execute(this.jta_stmt.getText().trim());
-				 stmt.close();	
-				 JOptionPane.showMessageDialog(this, "Sentencia SQL ejecutada con exito ", "Consulta finalizada", JOptionPane.INFORMATION_MESSAGE);
-			 }
-		 } catch (SQLException e) {
-			 String error_msg = e.getMessage()
+				stmt.execute(this.jta_stmt.getText().trim());	
+				JOptionPane.showMessageDialog(this, "Sentencia SQL ejecutada con exito ", "Consulta finalizada", JOptionPane.INFORMATION_MESSAGE);
+			}
+			stmt.close();
+		} catch (SQLException e) {
+			String error_msg = e.getMessage()
 					+ "\nSQLState: " + e.getSQLState() 
 					+ "\nVendorError: " + e.getErrorCode();
-			 JOptionPane.showMessageDialog(this, error_msg, "Error al realizar consulta", JOptionPane.ERROR_MESSAGE);
-		 }
+			JOptionPane.showMessageDialog(this, error_msg, "Error al realizar consulta", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	

@@ -81,7 +81,7 @@ CREATE TABLE clases (
 
 CREATE TABLE comodidades (
 	codigo INT UNSIGNED NOT NULL,
-	descripcion VARCHAR(45) NOT NULL,
+	descripcion TEXT NOT NULL,
 
 	CONSTRAINT pk_comodidades PRIMARY KEY (codigo)
 )ENGINE = InnoDB;
