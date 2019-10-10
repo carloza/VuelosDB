@@ -19,14 +19,11 @@ import javax.swing.table.DefaultTableModel;
 
 import other.TuneadaTableModel;
 import sql_conn.vuelos_db;
-
 import javax.swing.JComboBox;
-
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,12 +33,10 @@ import java.util.Vector;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 
-import quick.dbtable.DBTable;
-
 public class Consulta {
 
 	private JFrame frame;
-	private JLabel lblSeleccioneElTipo;
+	private JLabel lblSeleccioneElTipo, lblAyuda;
 	private JRadioButton rdbtnSoloIda;
 	private JRadioButton rdbtnIdaYVuelta;
 	private ButtonGroup bg;
@@ -61,7 +56,7 @@ public class Consulta {
 	private JTable tablaVUELTA;
 	private JScrollPane jspTablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
-	private ArrayList<Date> FechasIda;
+	private ArrayList<Date> FechasIda,FechasVuelta;
 
 
 	/**
@@ -95,27 +90,31 @@ public class Consulta {
 		ubicaciones = new ArrayList<Ubicacion>();
 		FechasIda = new ArrayList<Date>();
 		
+		
 		frame = new JFrame("Consulta");
 		frame.setBounds(100, 100, 800, 510);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
 		
-		lblSeleccioneElTipo = new JLabel("Seleccione el tipo de vuelo");
-		lblSeleccioneElTipo.setBounds(12, 12, 248, 15);
+		lblSeleccioneElTipo = new JLabel("Tipo de vuelo");
+		lblSeleccioneElTipo.setBounds(12, 17, 100, 15);
 		frame.getContentPane().add(lblSeleccioneElTipo);
+
+		lblAyuda = new JLabel("Seleccione tipo de vuelo, origen, destino y fechas correspondientes");
+		lblAyuda.setBounds(0, 0, 400, 15);
+		frame.getContentPane().add(lblAyuda);
 		
 		rdbtnSoloIda = new JRadioButton("Solo Ida");
-		rdbtnSoloIda.setBounds(12, 30, 248, 23);
+		rdbtnSoloIda.setBounds(17, 35, 248, 23);
 		rdbtnSoloIda.setSelected(true);
 		rdbtnSoloIda.addItemListener(new RadioButtonListener ());
 		frame.getContentPane().add(rdbtnSoloIda);
 		
 		rdbtnIdaYVuelta = new JRadioButton("Ida y vuelta");
-		rdbtnIdaYVuelta.setBounds(12, 49, 248, 23);
+		rdbtnIdaYVuelta.setBounds(17, 54, 248, 23);
 		rdbtnIdaYVuelta.addItemListener(new RadioButtonListener ());
 			
-		
 		frame.getContentPane().add(rdbtnIdaYVuelta);
 		
 		bg = new ButtonGroup();
@@ -123,20 +122,20 @@ public class Consulta {
 		bg.add(rdbtnIdaYVuelta);
 		
 		lblCiudadOrigen = new JLabel("Ciudad Origen");
-		lblCiudadOrigen.setBounds(270, 12, 248, 15);
+		lblCiudadOrigen.setBounds(275, 17, 248, 15);
 		frame.getContentPane().add(lblCiudadOrigen);
 
 		comboBox = new JComboBox<String>();
-		comboBox.setBounds(270, 27, 248, 23);
+		comboBox.setBounds(275, 32, 248, 23);
 		
 		frame.getContentPane().add(comboBox);
 		
 		lblCiudadDestino = new JLabel("Ciudad Destino");
-		lblCiudadDestino.setBounds(270, 50, 248, 15);
+		lblCiudadDestino.setBounds(275, 55, 248, 15);
 		frame.getContentPane().add(lblCiudadDestino);
 		
 		comboBox_1 = new JComboBox<String>();
-		comboBox_1.setBounds(270, 65, 248, 23);
+		comboBox_1.setBounds(275, 70, 248, 23);
 
 		frame.getContentPane().add(comboBox_1);
 
@@ -162,11 +161,11 @@ public class Consulta {
 		
 		
 		lblFechaIda = new JLabel("Fecha Ida");
-		lblFechaIda.setBounds(536, 12, 248, 15);
+		lblFechaIda.setBounds(541, 17, 248, 15);
 		frame.getContentPane().add(lblFechaIda);
 		
 		comboBoxFechaIda = new JComboBox<String>();
-		comboBoxFechaIda.setBounds(536, 27, 248, 23);
+		comboBoxFechaIda.setBounds(541, 32, 248, 23);
 		comboBoxFechaIda.setEnabled(false);
 		
 		comboBoxFechaIda.addActionListener(new ActionListener() {
@@ -185,11 +184,13 @@ public class Consulta {
 						comboBoxFechaVuelta.removeAllItems();
 						String query = generarQueryFecha(destino,origen,fecha);
 						SimpleDateFormat form = new SimpleDateFormat("dd/MM/yyyy");
+						FechasVuelta = new ArrayList<Date>();
 						try {
 							Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
 							ResultSet rs = stmt.executeQuery(query);
 							while(rs.next()) {
 								Date f = rs.getDate("fecha");
+								FechasVuelta.add(f);
 								comboBoxFechaVuelta.addItem(form.format(f));
 							}
 							comboBoxFechaVuelta.setEnabled(true);
@@ -211,11 +212,11 @@ public class Consulta {
 		frame.getContentPane().add(comboBoxFechaIda);
 		
 		lblFechaVuelta = new JLabel("Fecha Vuelta");
-		lblFechaVuelta.setBounds(536, 50, 248, 15);
+		lblFechaVuelta.setBounds(541, 55, 248, 15);
 		frame.getContentPane().add(lblFechaVuelta);
 		
 		comboBoxFechaVuelta = new JComboBox<String>();
-		comboBoxFechaVuelta.setBounds(536, 65, 248, 23);
+		comboBoxFechaVuelta.setBounds(541, 70, 248, 23);
 		comboBoxFechaVuelta.setEnabled(false);
 		comboBoxFechaVuelta.addActionListener(new ActionListener() {
 
@@ -224,10 +225,9 @@ public class Consulta {
 				if (idayvuelta && comboBoxFechaVuelta.getSelectedIndex() != -1)
 					btnVer.setEnabled(true);
 							
-			}
-			
-				
+			}	
 		});
+		
 		frame.getContentPane().add(comboBoxFechaVuelta);
 		
 		comboBox.addActionListener(new ListenerComboBox());
@@ -266,9 +266,6 @@ public class Consulta {
 	
 	private void rowSeleccionada(JTable tabla) {
 		try {
-			if (tabla == null)
-				System.out.println("si es nula");
-
 			String vuelo = tabla.getValueAt(tabla.getSelectedRow(), 0).toString();
 			String fecha = tabla.getValueAt(tabla.getSelectedRow(), 1).toString();
 			String query = "SELECT DISTINCT vd.fecha,vd.clase, vd.precio, vd.asientos_disponibles "
@@ -286,7 +283,6 @@ public class Consulta {
 			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("entro aca");
 		} 
 		
 	}
@@ -302,7 +298,7 @@ public class Consulta {
 		Date fecha_ida = FechasIda.get(comboBoxFechaIda.getSelectedIndex());
 		String queryIda = generarQuery(origen, destino,fecha_ida);
 		if(idayvuelta) {
-			Date fecha_vuelta = FechasIda.get(comboBoxFechaVuelta.getSelectedIndex());
+			Date fecha_vuelta = FechasVuelta.get(comboBoxFechaVuelta.getSelectedIndex());
 
 			jspTablaIDA.setBounds(12, 129, 772, 157);
 			lblVuelosDeVuelta.setVisible(true);
@@ -322,20 +318,6 @@ public class Consulta {
 			tabla_db.setModel(new TuneadaTableModel(rs));
 			tabla_db.repaint();
 			stmt.close();
-			/*
-			tabla_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
-			tabla_db.setSelectSql(query);
-			tabla_db.createColumnModelFromQuery();
-			for (int i = 0; i < tabla_db.getColumnCount(); i++) { // para que muestre correctamente los valores de tipo TIME (hora)  		   		  
-	    		 if	 (tabla_db.getColumn(i).getType()==Types.TIME){    		 
-	    			 tabla_db.getColumn(i).setType(Types.CHAR);  
-	  	       	 }
-	    		 if	 (tabla_db.getColumn(i).getType()==Types.DATE){
-	    			 tabla_db.getColumn(i).setDateFormat("dd/MM/YYYY");
-	    		 }
-	          }
-			tabla_db.refresh();
-			*/
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -354,12 +336,10 @@ public class Consulta {
 		if (fecha_ida != null)
 			s += " and (DATEDIFF('"+ fecha_ida.toString() + "',vd.fecha) <  0)";
 		
-		System.out.println(s);
-
 		return s;
 	}
 	
-	protected String generarQuery(Ubicacion origen, Ubicacion destino, Date fecha_ida) {
+	protected String generarQuery(Ubicacion origen, Ubicacion destino, Date fecha) {
 		String s = "select distinct "
 					+ "vd.vuelo, vd.fecha, vd.nombre_ap_salida, vd.hora_sale, vd.nombre_ap_llegada, "
 					+ "vd.hora_llega, vd.modelo_avion, vd.tiempo_estimado "
@@ -371,10 +351,9 @@ public class Consulta {
 					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
 					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
 
-		if (fecha_ida != null)
-			s += " and (vd.fecha = '"+ fecha_ida.toString() + "')";
-		System.out.println(s);
-
+		if (fecha != null) {
+			s += " and (vd.fecha = '"+ fecha.toString() + "')";
+		}
 		return s;
 	}
 	

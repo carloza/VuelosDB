@@ -45,10 +45,10 @@ public class Init extends JFrame {
 		button_logon = new JButton ("Ingresar");
 		jtf_user = new JTextField("Legajo...");
 		jpf_password = new JPasswordField("password");
-		label_helptxt = new JLabel("Seleccione tipo de operador y complete los datos");
+		label_helptxt = new JLabel("Seleccione tipo de operador, complete los datos e ingrese (o presione tecla enter)");
 		
 		//Parameters of the graphics objects
-		label_helptxt.setSize(300,20);
+		label_helptxt.setSize(495,20);
 		label_helptxt.setLocation(3,0);
 		
 		button_admin.setLocation(2,20);

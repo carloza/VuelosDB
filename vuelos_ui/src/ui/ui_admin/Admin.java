@@ -107,7 +107,6 @@ public class Admin extends JFrame {
 		btn_remove.addActionListener(new listener_remove(jta_stmt));
 		
 		
-		
 		jl_tables.addListSelectionListener(new ListSelectionListener() {
 
             @Override
