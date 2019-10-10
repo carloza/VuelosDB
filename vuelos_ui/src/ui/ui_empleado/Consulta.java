@@ -13,12 +13,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
+import other.TuneadaTableModel;
 import sql_conn.vuelos_db;
 
 import javax.swing.JComboBox;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -26,7 +31,7 @@ import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
+import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -50,9 +55,11 @@ public class Consulta {
 	private JComboBox<String> comboBoxFechaVuelta;
 	private JButton btnVer;
 	private JLabel lblVuelosDeIda;
-	private DBTable tablaIDA;
+	private JTable tablaIDA;
+	private JScrollPane jspTablaIDA;
 	private JLabel lblVuelosDeVuelta;
-	private DBTable tablaVUELTA;
+	private JTable tablaVUELTA;
+	private JScrollPane jspTablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
 	private ArrayList<Date> FechasIda;
 
@@ -237,25 +244,27 @@ public class Consulta {
 		lblVuelosDeIda.setBounds(12, 115, 139, 15);
 		frame.getContentPane().add(lblVuelosDeIda);
 		
-		tablaIDA = new DBTable();
+		tablaIDA = new JTable();
 		tablaIDA.setBounds(12, 129, 772, 340);
-		tablaIDA.setEditable(false);
 		tablaIDA.addMouseListener(new TablaListener(tablaIDA));
-		frame.getContentPane().add(tablaIDA);
+		jspTablaIDA = new JScrollPane(tablaIDA);
+		jspTablaIDA.setBounds(12, 129, 772, 340);
+		frame.getContentPane().add(jspTablaIDA);
 		
 		lblVuelosDeVuelta = new JLabel("Vuelos de vuelta");
 		lblVuelosDeVuelta.setBounds(12, 298, 139, 15);
 		lblVuelosDeVuelta.setVisible(false);
 		frame.getContentPane().add(lblVuelosDeVuelta);
 		
-		tablaVUELTA = new DBTable();
+		tablaVUELTA = new JTable();
 		tablaVUELTA.setBounds(12, 312, 772, 157);
-		tablaVUELTA.setEditable(false);
 		tablaVUELTA.addMouseListener(new TablaListener(tablaVUELTA));
-		frame.getContentPane().add(tablaVUELTA);
+		jspTablaVUELTA = new JScrollPane(tablaVUELTA);
+		jspTablaVUELTA.setBounds(12, 312, 772, 157);
+		frame.getContentPane().add(jspTablaVUELTA);
 	}
 	
-	private void rowSeleccionada(DBTable tabla) {
+	private void rowSeleccionada(JTable tabla) {
 		try {
 			if (tabla == null)
 				System.out.println("si es nula");
@@ -265,25 +274,16 @@ public class Consulta {
 			String query = "SELECT DISTINCT vd.fecha,vd.clase, vd.precio, vd.asientos_disponibles "
 						 + "FROM vuelos.vuelos_disponibles AS vd "
 						 + "WHERE (vd.vuelo = "+vuelo+") AND (vd.fecha = '"+fecha+"');";
-			DBTable tabla_db = new DBTable();
-			tabla_db.setBounds(0, 0, 300, 300);
-			tabla_db.setEditable(false);
-			tabla_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
-			tabla_db.setSelectSql(query);
-			tabla_db.createColumnModelFromQuery();
-			for (int i = 0; i < tabla_db.getColumnCount(); i++) { // para que muestre correctamente los valores de tipo TIME (hora)  		   		  
-	    		 if	 (tabla_db.getColumn(i).getType()==Types.TIME){    		 
-	    			 tabla_db.getColumn(i).setType(Types.CHAR);  
-	  	       	 }
-	    		 if	 (tabla_db.getColumn(i).getType()==Types.DATE){
-	    			 tabla_db.getColumn(i).setDateFormat("dd/MM/YYYY");
-	    		 }
-	          }
-			tabla_db.refresh();
+			//nueva forma de mostrar la tabla
+			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			JTable table = new JTable(new TuneadaTableModel(rs));
+			table.setSize(300, 300);
 			JOptionPane.showMessageDialog(frame,
-					tabla_db,
+					new JScrollPane(table),
                     "Vuelos para "+fecha,
                     JOptionPane.INFORMATION_MESSAGE);
+			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println("entro aca");
@@ -293,9 +293,10 @@ public class Consulta {
 	
 	private void inflarTablas() {
 		boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
-		tablaIDA.setBounds(12, 129, 772, 340);
+		jspTablaIDA.setBounds(12, 129, 772, 340);
 		lblVuelosDeVuelta.setVisible(false);
-		tablaVUELTA.setVisible(false);
+		jspTablaVUELTA.setVisible(false);
+		//jspTablaIDA.repaint();
 		Ubicacion origen = ubicaciones.get(comboBox.getSelectedIndex());
 		Ubicacion destino = ubicaciones.get(comboBox_1.getSelectedIndex());
 		Date fecha_ida = FechasIda.get(comboBoxFechaIda.getSelectedIndex());
@@ -303,17 +304,25 @@ public class Consulta {
 		if(idayvuelta) {
 			Date fecha_vuelta = FechasIda.get(comboBoxFechaVuelta.getSelectedIndex());
 
-			tablaIDA.setBounds(12, 129, 772, 157);
+			jspTablaIDA.setBounds(12, 129, 772, 157);
 			lblVuelosDeVuelta.setVisible(true);
-			tablaVUELTA.setVisible(true);
+			jspTablaVUELTA.setVisible(true);
+			jspTablaIDA.repaint();
 			String queryVuelta = generarQuery(destino, origen,fecha_vuelta);
 			inflarUnaTabla(tablaVUELTA, queryVuelta);
 		}
 		inflarUnaTabla(tablaIDA, queryIda);
+		jspTablaIDA.repaint();
 	}
 	
-	private void inflarUnaTabla(DBTable tabla_db, String query) {
+	private void inflarUnaTabla(JTable tabla_db, String query) {
 		try {
+			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			tabla_db.setModel(new TuneadaTableModel(rs));
+			tabla_db.repaint();
+			stmt.close();
+			/*
 			tabla_db.setConnection(vuelos_db.get_Connection_Vuelos_DB());
 			tabla_db.setSelectSql(query);
 			tabla_db.createColumnModelFromQuery();
@@ -326,6 +335,7 @@ public class Consulta {
 	    		 }
 	          }
 			tabla_db.refresh();
+			*/
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -368,6 +378,32 @@ public class Consulta {
 		return s;
 	}
 	
+	public static DefaultTableModel buildTableModel(ResultSet rs)
+	        throws SQLException {
+
+	    ResultSetMetaData metaData = rs.getMetaData();
+
+	    // names of columns
+	    Vector<String> columnNames = new Vector<String>();
+	    int columnCount = metaData.getColumnCount();
+	    for (int column = 1; column <= columnCount; column++) {
+	        columnNames.add(metaData.getColumnName(column));
+	    }
+
+	    // data of the table
+	    Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+	    while (rs.next()) {
+	        Vector<Object> vector = new Vector<Object>();
+	        for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+	            vector.add(rs.getObject(columnIndex));
+	        }
+	        data.add(vector);
+	    }
+
+	    return new DefaultTableModel(data, columnNames);
+
+	}
+	
 	private class ListenerComboBox implements ActionListener {
 
 		public void actionPerformed(ActionEvent arg0) {
@@ -406,9 +442,9 @@ public class Consulta {
 	
 	private class TablaListener implements MouseListener{
 		
-		private DBTable tablaLocal;
+		private JTable tablaLocal;
 		
-		public TablaListener(DBTable tablaLocal) {
+		public TablaListener(JTable tablaLocal) {
 			this.tablaLocal = tablaLocal;
 		}
 
