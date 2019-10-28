@@ -125,6 +125,8 @@ CREATE TABLE reservas(
 	CONSTRAINT fk_legajo_reservas FOREIGN KEY (legajo) REFERENCES empleados(legajo)
 )ENGINE = InnoDB;
 
+
+
 #-------------------------------------------------------------------------
 # Creación Tablas para las relaciones
 
@@ -162,6 +164,15 @@ CREATE TABLE reserva_vuelo_clase (
 	CONSTRAINT fk_clase_reserva_vuelo_clase FOREIGN KEY (clase) REFERENCES clases(nombre)
 )ENGINE = InnoDB;
 
+CREATE TABLE asientos_reservados(
+	cantidad INT UNSIGNED NOT NULL,
+	clase VARCHAR(45) NOT NULL, 
+	fecha DATE NOT NULL,
+	vuelo VARCHAR(45) NOT NULL, 
+	CONSTRAINT fk_fecha_instancias_vuelo FOREIGN KEY (vuelo,fecha) REFERENCES instancias_vuelo(vuelo,fecha),
+	CONSTRAINT fk_nombre_clases FOREIGN KEY (clase) REFERENCES clases(nombre),
+	CONSTRAINT pk_reservas PRIMARY KEY (vuelo,fecha,clase)
+)ENGINE = InnoDB;
 
 #-------------------------------------------------------------------------
 # Nueva vista -->>sin join y un poco mas organizada (ponele)
