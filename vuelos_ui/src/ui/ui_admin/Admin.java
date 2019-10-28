@@ -37,6 +37,7 @@ public class Admin extends JFrame {
 	private JButton btn_exec, btn_remove;
 	private JScrollPane jsp_jltable, jsp_jlcolumns;
 	private JList<String> jl_tables;
+	private String[] tables_array = null;
 	
 	public Admin () {
 		
@@ -48,65 +49,11 @@ public class Admin extends JFrame {
 		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
 		this.setLayout(null);
 		
-		String[] tables_array = null;
-		
-		//Get tables of db
-		try {
-			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
-			ResultSet rs = stmt.executeQuery("show tables");
-			ArrayList<String>tmp_list = new ArrayList<String>();
-			while (rs.next()) 
-				tmp_list.add(rs.getString("Tables_in_vuelos"));
-			tables_array = tmp_list.toArray(new String[tmp_list.size()]);
-			stmt.close();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		//Creation of graphics objects
-		label_info = new JLabel("Ingrese una consulta SQL y presione ejecutar: ");
-		label_dbs = new JLabel("Seleccione una tabla para ver sus atributos: ");
-		label_cols = new JLabel();
-		jta_stmt = new JTextArea();
-		btn_exec = new JButton("Ejecutar");
-		btn_remove = new JButton("Borrar");
-		table_db = new JTable();
-		
-		jl_tables = new JList<String>(tables_array);
-		jsp_jltable = new JScrollPane();
-		jsp_jlcolumns = new JScrollPane();
-		
-		//Parameters of the graphics objects
-		label_info.setLocation(8,0);
-		label_info.setSize(800,30);
-		
-		label_dbs.setLocation(800,0);
-		label_dbs.setSize(360,30);
-		
-		label_cols.setLocation(800,230);
-		label_cols.setSize(300,30);
-		label_cols.setText("Atributos asociados");
-		
-		jta_stmt.setTabSize(4);
-		jta_stmt.setColumns(100);
-		jta_stmt.setSize(796,151);
-		jta_stmt.setLocation(1, 30);
-		jta_stmt.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.lightGray));
-
-		table_db.setSize(800,340);
-		jspTable_db = new JScrollPane(table_db);
-		jspTable_db.setBounds(0, 180, 800, 340);
-	
-		btn_exec.setSize(100,20);
-		btn_exec.setLocation(850, 480);
-		btn_exec.addActionListener(new listener_query(this));
-		
-		btn_remove.setSize(100,20);
-		btn_remove.setLocation(950, 480);
-		btn_remove.addActionListener(new listener_remove(jta_stmt));
 		
 		
+		//Get tables of db and set data and listener on JList
+		jl_tables = new JList<String>();
+		update_jltables();
 		jl_tables.addListSelectionListener(new ListSelectionListener() {
 
             @Override
@@ -143,6 +90,50 @@ public class Admin extends JFrame {
                 }
             }
         });
+	
+		
+		//Creation of graphics objects
+		label_info = new JLabel("Ingrese una consulta SQL y presione ejecutar: ");
+		label_dbs = new JLabel("Seleccione una tabla para ver sus atributos: ");
+		label_cols = new JLabel();
+		jta_stmt = new JTextArea();
+		btn_exec = new JButton("Ejecutar");
+		btn_remove = new JButton("Borrar");
+		table_db = new JTable();
+
+		jsp_jltable = new JScrollPane();
+		jsp_jlcolumns = new JScrollPane();
+		
+		//Parameters of the graphics objects
+		label_info.setLocation(8,0);
+		label_info.setSize(800,30);
+		
+		label_dbs.setLocation(800,0);
+		label_dbs.setSize(360,30);
+		
+		label_cols.setLocation(800,230);
+		label_cols.setSize(300,30);
+		label_cols.setText("Atributos asociados");
+		
+		jta_stmt.setTabSize(4);
+		jta_stmt.setColumns(100);
+		jta_stmt.setSize(796,151);
+		jta_stmt.setLocation(1, 30);
+		jta_stmt.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.lightGray));
+
+		table_db.setSize(800,340);
+		jspTable_db = new JScrollPane(table_db);
+		jspTable_db.setBounds(0, 180, 800, 340);
+	
+		btn_exec.setSize(100,20);
+		btn_exec.setLocation(850, 480);
+		btn_exec.addActionListener(new listener_query(this));
+		
+		btn_remove.setSize(100,20);
+		btn_remove.setLocation(950, 480);
+		btn_remove.addActionListener(new listener_remove(jta_stmt));
+		
+		
 		
 		jsp_jltable.setLocation(800,30);
 		jsp_jltable.setSize(290,200);
@@ -187,8 +178,10 @@ public class Admin extends JFrame {
 				//De lo contrario ejecuto la consulta y notifico que finalizo con exito
 				stmt.execute(this.jta_stmt.getText().trim());	
 				JOptionPane.showMessageDialog(this, "Sentencia SQL ejecutada con exito ", "Consulta finalizada", JOptionPane.INFORMATION_MESSAGE);
+				update_jltables();
 			}
 			stmt.close();
+		
 		} catch (SQLException e) {
 			String error_msg = e.getMessage()
 					+ "\nSQLState: " + e.getSQLState() 
@@ -196,6 +189,24 @@ public class Admin extends JFrame {
 			JOptionPane.showMessageDialog(this, error_msg, "Error al realizar consulta", JOptionPane.ERROR_MESSAGE);
 		}
 	}
+	
+	private void update_jltables(){
+		try {
+			Statement stmt = vuelos_db.get_Connection_Vuelos_DB().createStatement();
+			ResultSet rs = stmt.executeQuery("show tables");
+			ArrayList<String>tmp_list = new ArrayList<String>();
+			while (rs.next()) 
+				tmp_list.add(rs.getString("Tables_in_vuelos"));
+			tables_array = tmp_list.toArray(new String[tmp_list.size()]);
+			stmt.close();
+			jl_tables.setListData(tables_array);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
 	
 	
 	private class listener_query implements ActionListener{
