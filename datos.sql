@@ -120,27 +120,8 @@ INSERT INTO posee VALUES ("Primera", 3);
 INSERT INTO posee VALUES ("Primera", 4);
 INSERT INTO posee VALUES ("Primera", 5);
 
-INSERT INTO reservas VALUES (1, "2019/08/10", "2019/12/10", "Pagada", "DNI", 12358179,105721);
-INSERT INTO reservas VALUES (2, "2019/08/02", "2020/02/10", "Pendiente de pago", "DNI", 32358449,105757);
-INSERT INTO reservas VALUES (3, "2019/08/02", "2020/02/10", "Pendiente de pago", "DNI", 22358180,105721);
-INSERT INTO reservas VALUES (4, "2019/09/12", "2020/03/10", "Pagada", "DNI", 42000123,105757);
-INSERT INTO reservas VALUES (5, "2019/10/22", "2020/05/10", "Pendiente de pago", "DNI", 12358179,105721);
-INSERT INTO reservas VALUES (6, "2019/10/22", "2020/05/10", "Pendiente de pago", "DNI", 12358179,105721);
-INSERT INTO reservas VALUES (7, "2019/10/22", "2020/05/10", "Pendiente de pago", "DNI", 12358179,105721);
-INSERT INTO reservas VALUES (8, "2019/10/22", "2020/05/10", "Pendiente de pago", "DNI", 12358179,105721);
-
-INSERT INTO reserva_vuelo_clase VALUES (1,1001,"2019/09/16","Primera");
-INSERT INTO reserva_vuelo_clase VALUES (2,1001,"2019/09/16","Economica");
-INSERT INTO reserva_vuelo_clase VALUES (3,1001,"2019/09/16","Economica");
-INSERT INTO reserva_vuelo_clase VALUES (4,4951,"2019/11/08","Economica");
-INSERT INTO reserva_vuelo_clase VALUES (5,7051,"2019/09/17","Economica");
-
-INSERT INTO reserva_vuelo_clase VALUES (6,3999,"2019/12/18","Economica");
-INSERT INTO reserva_vuelo_clase VALUES (7,3999,"2019/12/18","Economica");
-INSERT INTO reserva_vuelo_clase VALUES (8,3999,"2019/12/18","Economica Plus");
-INSERT INTO reserva_vuelo_clase VALUES (150,1001,"2019/09/16","Economica"); #pruebaerror
-
-
+INSERT INTO asientos_reservados VALUES (0,'Primera','2019-09-09',1001);
+INSERT INTO asientos_reservados VALUES (0,'Primera','2019-09-16',2001);
 
 
 
