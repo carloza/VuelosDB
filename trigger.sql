@@ -23,6 +23,28 @@ BEGIN
 END; 
 !
 
+CREATE PROCEDURE insertar_instancia_vuelo
+(IN vuelo VARCHAR(45), IN fecha_limite DATE, IN dia_a_insertar DATE, IN dia_semana VARCHAR(2)) 
+BEGIN
+	
+	SET @dia_a_ins = dia_a_insertar;
+	
+	insertar_vuelos: LOOP
+		IF ((SELECT DATEDIFF(fecha_limite,@dia_a_ins)) >= 0) 		
+		THEN
+			INSERT INTO instancias_vuelo VALUES (vuelo,@dia_a_ins,dia_semana,'A tiempo');
+			
+			SET @dia_a_ins = (SELECT DATE_ADD(@dia_a_ins, INTERVAL 7 DAY));
+			ITERATE insertar_vuelos;
+		ELSE
+			LEAVE insertar_vuelos;
+		END IF;
+	END LOOP insertar_vuelos;
+	
+END; 
+!
+
+
 CREATE TRIGGER crear_instancias_vuelo
 AFTER INSERT ON salidas        
 FOR EACH ROW
@@ -39,18 +61,11 @@ BEGIN
 	
 	SET @fecha_limite = (SELECT DATE_ADD(@dia_actual,INTERVAL 1 YEAR));
 	
-	insertar_vuelos: LOOP
-		IF ((SELECT DATEDIFF(@fecha_limite,@dia_a_insertar)) >= 0) 		
-		THEN
-			INSERT INTO instancias_vuelo VALUES (NEW.vuelo,@dia_a_insertar,@dia_semana_new,'A tiempo');
-			SET @dia_a_insertar = (SELECT DATE_ADD(@dia_a_insertar, INTERVAL 7 DAY));
-			ITERATE insertar_vuelos;
-		ELSE
-			LEAVE insertar_vuelos;
-		END IF;
-	END LOOP insertar_vuelos;
+	CALL insertar_instancia_vuelo(NEW.vuelo, @fecha_limite, @dia_a_insertar,@dia_semana_new);
+	
 	
 END; 
 !
+
 
 delimiter ;
