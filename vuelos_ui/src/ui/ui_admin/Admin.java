@@ -25,6 +25,7 @@ import javax.swing.event.ListSelectionListener;
 
 import other.TuneadaTableModel;
 import sql_conn.vuelos_db;
+import ui.Init;
 
 public class Admin extends JFrame {
 
@@ -38,6 +39,7 @@ public class Admin extends JFrame {
 	private JScrollPane jsp_jltable, jsp_jlcolumns;
 	private JList<String> jl_tables;
 	private String[] tables_array = null;
+	private JButton back_to_init;
 	
 	public Admin () {
 		
@@ -133,7 +135,10 @@ public class Admin extends JFrame {
 		btn_remove.setLocation(950, 480);
 		btn_remove.addActionListener(new listener_remove(jta_stmt));
 		
-		
+		back_to_init = new JButton ("Cerrar sesión");
+		back_to_init.addActionListener(new action_cerrar_sesion(this));
+		back_to_init.setSize(150,20);
+		back_to_init.setLocation(640,5);
 		
 		jsp_jltable.setLocation(800,30);
 		jsp_jltable.setSize(290,200);
@@ -153,6 +158,8 @@ public class Admin extends JFrame {
 		this.add(btn_remove);
 		this.add(jsp_jltable);
 		this.add(jsp_jlcolumns);
+		this.add(back_to_init);
+				
 		
 		this.setVisible(true);
 		this.exec_query("SELECT * FROM vuelos_disponibles");
@@ -208,7 +215,24 @@ public class Admin extends JFrame {
 	}
 	
 	
-	
+	private class action_cerrar_sesion implements ActionListener {
+
+		Admin adm;
+		public action_cerrar_sesion (Admin adm) {
+			this.adm = adm;
+			
+		}
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			
+			vuelos_db.close_Connection();
+			Init ui = new Init();		
+			ui.setVisible(true);
+			adm.dispose();
+		}
+		
+		
+	}
 	private class listener_query implements ActionListener{
 
 		private Admin adm;
