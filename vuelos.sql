@@ -328,18 +328,20 @@ BEGIN
 							INSERT INTO reservas VALUES (NULL,(SELECT CURDATE()),@vencimiento,@estado_reserva,doc_tipo,doc_nro,nro_legajo);
 							INSERT INTO reserva_vuelo_clase VALUES ((SELECT LAST_INSERT_ID()),vuelo,fecha,clase);
 							SELECT 'RESERVA EXITOSA: ' AS resultado, @estado_reserva;
+							
+							UPDATE asientos_reservados AS ar
+							SET cantidad = cantidad + 1
+							WHERE (
+								(ar.clase = clase) AND
+								(ar.fecha = fecha) AND
+								(ar.vuelo = vuelo)
+							); 
 
 						ELSE
 							SELECT 'ERROR: no hay disponibilidad para el vuelo y la clase seleccionados' AS result;
 						END IF;
 											
-						UPDATE asientos_reservados AS ar
-						SET cantidad = cantidad + 1
-						WHERE (
-							(ar.clase = clase) AND
-							(ar.fecha = fecha) AND
-							(ar.vuelo = vuelo)
-						); 
+						
 						
 					ELSE
 						SELECT 'ERROR: legajo invalido' AS resultado;
