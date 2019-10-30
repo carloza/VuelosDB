@@ -51,6 +51,8 @@ INSERT INTO modelos_avion VALUES ("CRJ700", "Jet Regional", 1, 78);
 
 
 INSERT INTO salidas VALUES ("1001", 'Lu', '09:00:00', '09:50:00',"737-800");
+INSERT INTO salidas VALUES ("1001", 'Ma', '09:00:00', '09:50:00',"737-800");
+
 INSERT INTO salidas VALUES ("1002", 'Do', '07:00:00', '16:00:00',"717");
 INSERT INTO salidas VALUES ("2001", 'Lu', '11:00:00', '13:00:00',"190");
 INSERT INTO salidas VALUES ("3999", 'Mi', '07:00:00', '16:00:00',"777");
@@ -59,7 +61,7 @@ INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717");
 INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717"); #PRUEBAERROR
 INSERT INTO salidas VALUES ("7051", 'Ma', '06:00:00', '07:00:00',"CRJ700");
 
-INSERT INTO brinda VALUES ("1001", 'Lu', "Economica", 1000.00, 60);
+INSERT INTO brinda VALUES ("2001", 'Ma', "Economica", 1000.00, 1);
 INSERT INTO brinda VALUES ("1001", 'Lu', "Economica Plus", 3000.00, 20);
 INSERT INTO brinda VALUES ("1001", 'Lu', "Primera", 9000.51, 46);
 INSERT INTO brinda VALUES ("2001", 'Lu', "Primera", 59000.51, 100);
