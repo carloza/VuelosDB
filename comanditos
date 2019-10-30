@@ -1,5 +1,8 @@
 mysql -u root -p
 source vuelos.sql
+source trigger.sql
+source trigger_ad.sql
+source datos.sql
 drop database vuelos;
 drop user ''@'localhost';
 drop user 'admin'@'localhost';

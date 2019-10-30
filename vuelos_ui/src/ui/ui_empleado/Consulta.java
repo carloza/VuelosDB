@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -64,16 +66,22 @@ public class Consulta {
 	private JScrollPane jspTablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
 //	private ArrayList<Date> FechasIda,FechasVuelta;
+	private JButton btnReserva;
+	private Reserva reserva;
+	private boolean performinReserva;
+	private boolean valoresIda;
+	private boolean valoresVuelta;
+	private String numeroLegajo;
 
 
 	/**
 	 * Launch the application.
 	 */
-	public static void Iniciar() {
+	public static void Iniciar(String legajo) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Consulta window = new Consulta();
+					Consulta window = new Consulta(legajo);
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -85,7 +93,8 @@ public class Consulta {
 	/**
 	 * Create the application.
 	 */
-	public Consulta() {
+	public Consulta(String legajo) {
+		numeroLegajo = legajo;
 		initialize();
 	}
 
@@ -99,10 +108,29 @@ public class Consulta {
 		
 		
 		frame = new JFrame("GUI Empleado");
-		frame.setBounds(100, 100, 800, 510);
+		frame.setBounds(100, 100, 800, 540);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
+		frame.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent arg0) {
+			}
+
+			public void keyReleased(KeyEvent arg0) {
+			}
+
+			public void keyPressed(KeyEvent arg0) {
+				int key = arg0.getKeyCode(); 
+				if (key == KeyEvent.VK_ESCAPE) {
+					cancelarReserva();
+				}
+			}
+		});
+		
+		reserva = null;
+		performinReserva = false;
+		valoresIda = false;
+		valoresVuelta = false;
 		
 		lblSeleccioneElTipo = new JLabel("Tipo de vuelo");
 		lblSeleccioneElTipo.setBounds(12, 17, 100, 15);
@@ -248,7 +276,7 @@ public class Consulta {
 		
 		tablaIDA = new JTable();
 		tablaIDA.setBounds(12, 129, 772, 340);
-		tablaIDA.addMouseListener(new TablaListener(tablaIDA));
+		tablaIDA.addMouseListener(new TablaListenerMostrarInfo(tablaIDA));
 		jspTablaIDA = new JScrollPane(tablaIDA);
 		jspTablaIDA.setBounds(12, 129, 772, 340);
 		frame.getContentPane().add(jspTablaIDA);
@@ -260,10 +288,16 @@ public class Consulta {
 		
 		tablaVUELTA = new JTable();
 		tablaVUELTA.setBounds(12, 312, 772, 157);
-		tablaVUELTA.addMouseListener(new TablaListener(tablaVUELTA));
+		tablaVUELTA.addMouseListener(new TablaListenerMostrarInfo(tablaVUELTA));
 		jspTablaVUELTA = new JScrollPane(tablaVUELTA);
 		jspTablaVUELTA.setBounds(12, 312, 772, 157);
 		frame.getContentPane().add(jspTablaVUELTA);
+		
+		btnReserva = new JButton("Realizar una reserva");
+		btnReserva.setBounds(541, 481, 243, 25);
+		btnReserva.addActionListener(new BotonReservaListener());
+		btnReserva.setEnabled(false);
+		frame.getContentPane().add(btnReserva);
 	}
 	
 	private void rowSeleccionada(JTable tabla) {
@@ -278,10 +312,24 @@ public class Consulta {
 			ResultSet rs = stmt.executeQuery(query);
 			JTable table = new JTable(new TuneadaTableModel(rs));
 			table.setSize(300, 300);
-			JOptionPane.showMessageDialog(frame,
-					new JScrollPane(table),
-                    "Vuelos para "+fecha,
-                    JOptionPane.INFORMATION_MESSAGE);
+			if(performinReserva) {
+				int resu = JOptionPane.showConfirmDialog(
+						frame,
+						new JScrollPane(table),
+						"Vuelos para "+fecha,
+						JOptionPane.OK_CANCEL_OPTION);
+				if(performinReserva && resu == JOptionPane.OK_OPTION) {
+					String clase = table.getValueAt(tabla.getSelectedRow(), 1).toString();
+					setearReserva(tabla, vuelo, fecha, clase);
+				}else {
+					cancelarReserva();
+				}
+			}else {
+				JOptionPane.showMessageDialog(frame,
+						new JScrollPane(table),
+	                    "Vuelos para "+fecha,
+	                    JOptionPane.INFORMATION_MESSAGE);
+			}
 			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -289,6 +337,68 @@ public class Consulta {
 		
 	}
 	
+	private void setearReserva(JTable tabla, String vuelo, String fecha, String clase) {
+		if(tabla == tablaIDA) {
+			reserva.setNumeroVueloIda(vuelo);
+			reserva.setFechaVueloIda(fecha);
+			reserva.setClaseVueloIda(clase);
+			valoresIda = true;
+		}else if(tabla == tablaVUELTA){
+			reserva.setNumeroVueloVuelta(vuelo);
+			reserva.setFechaVueloVuelta(fecha);
+			reserva.setClaseVueloVuelta(clase);
+			valoresVuelta = true;
+		}
+		setearReservaSegundaFase();
+	}
+
+	private void setearReservaSegundaFase() {
+		if(!reserva.isIdaYVuelta() && valoresIda) {
+			String tipoDoc = JOptionPane.showInputDialog("Ingrese su Tipo de documento");
+			String nroDoc = JOptionPane.showInputDialog("Ingrese su numero de documento");
+//			reservar_vuelo_ida(IN vuelo INT,
+//								IN fecha DATE,
+//								IN clase VARCHAR(45),
+//								IN doc_tipo VARCHAR(45),
+//								IN doc_nro INT, 
+//								IN nro_legajo INT)
+			String query = "call reservar_vuelo_ida("+
+					reserva.getNumeroVueloIda()+", "+
+					reserva.getFechaVueloIda()+", "+
+					reserva.getClaseVueloIda()+", "+
+					tipoDoc+", "+
+					nroDoc+", "+
+					numeroLegajo+")";
+			System.out.println(query);
+			performinReserva = false;
+		}else if (reserva.isIdaYVuelta() && valoresIda && valoresVuelta) {
+			String tipoDoc = JOptionPane.showInputDialog("Ingrese su Tipo de documento");
+			String nroDoc = JOptionPane.showInputDialog("Ingrese su numero de documento");
+//			reservar_vuelo_ida_vuelta (IN vuelo_ida INT, 
+//									IN fecha_ida DATE,
+//									IN clase_ida VARCHAR(45),
+//									IN vuelo_vuelta INT,
+//									IN fecha_vuelta DATE, 
+//									IN clase_vuelta VARCHAR(45),
+//									IN doc_tipo VARCHAR(45),
+//									IN doc_nro INT, 
+//									IN nro_legajo INT)
+			String query = "call reservar_vuelo_ida("+
+						reserva.getNumeroVueloIda()+", "+
+						reserva.getFechaVueloIda()+", "+
+						reserva.getClaseVueloIda()+", "+
+						reserva.getNumeroVueloVuelta()+", "+
+						reserva.getFechaVueloVuelta()+", "+
+						reserva.getClaseVueloVuelta()+", "+
+						tipoDoc+", "+
+						nroDoc+", "+
+						numeroLegajo+")";
+			System.out.println(query);
+			performinReserva = false;
+		}
+		
+	}
+
 	private void inflarTablas() {
 		boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
 		jspTablaIDA.setBounds(12, 129, 772, 340);
@@ -306,8 +416,8 @@ public class Consulta {
 			e.printStackTrace();
 		}
 		String queryIda = generarQuery(origen, destino,fecha_ida);
-		System.out.println("boton VER");
-		System.out.println(queryIda);
+//		System.out.println("boton VER");
+//		System.out.println(queryIda);
 		if(idayvuelta) {
 			String fecha_vuelta = null;
 			try {
@@ -321,11 +431,12 @@ public class Consulta {
 			jspTablaVUELTA.setVisible(true);
 			jspTablaIDA.repaint();
 			String queryVuelta = generarQuery(destino, origen,fecha_vuelta);
-			System.out.println(queryVuelta);
+//			System.out.println(queryVuelta);
 			inflarUnaTabla(tablaVUELTA, queryVuelta);
 		}
 		inflarUnaTabla(tablaIDA, queryIda);
 		jspTablaIDA.repaint();
+		btnReserva.setEnabled(true);
 	}
 	
 	private void inflarUnaTabla(JTable tabla_db, String query) {
@@ -415,11 +526,11 @@ public class Consulta {
 		
 	}
 	
-	private class TablaListener implements MouseListener{
+	private class TablaListenerMostrarInfo implements MouseListener{
 		
 		private JTable tablaLocal;
 		
-		public TablaListener(JTable tablaLocal) {
+		public TablaListenerMostrarInfo(JTable tablaLocal) {
 			this.tablaLocal = tablaLocal;
 		}
 
@@ -454,7 +565,62 @@ public class Consulta {
 		    	btnVer.setEnabled(false);
 		    }
 		}
-			
 	}
 	
+	private class BotonReservaListener implements ActionListener{
+
+		public void actionPerformed(ActionEvent arg0) {
+			JOptionPane.showMessageDialog(frame,
+					"Uds esta por realizar una reserva, en cualquier momento puede tocar "
+					+ "la tecla <<ESC>> para cancelar el proceso de reservacion",
+                    "Reservas",
+                    JOptionPane.INFORMATION_MESSAGE);
+			performinReserva = true;
+			reserva = new Reserva(rdbtnIdaYVuelta.isSelected());
+			
+//			cambiarMouseListener(tablaIDA, new TablaListenerReservar(tablaIDA));
+//			cambiarMouseListener(tablaVUELTA, new TablaListenerReservar(tablaVUELTA));
+			
+		}
+		
+	}
+	
+//	private void cambiarMouseListener(JTable tabla, MouseListener ml) {
+//		for( MouseListener m : tabla.getMouseListeners() ) {
+//			tabla.removeMouseListener( m );
+//	    }
+//		tabla.addMouseListener(ml);
+//	}
+	
+	private void cancelarReserva() {
+		//aca seteo lo necesario y muestro un cartel de reserva cancelada
+		performinReserva = false;
+	}
+	
+//	private class MouseListenerElegirClase implements MouseListener{
+//		
+//		private JTable tablaLocal;
+//		
+//		public MouseListenerElegirClase(JTable tablaLocal) {
+//			this.tablaLocal = tablaLocal;
+//		}
+//
+//		public void mouseClicked(MouseEvent arg0) {
+//			elegirClase(tablaLocal);
+//		}
+//
+//		public void mouseEntered(MouseEvent arg0) {}
+//
+//		public void mouseExited(MouseEvent arg0) {}
+//
+//		public void mousePressed(MouseEvent arg0) {}
+//
+//		public void mouseReleased(MouseEvent arg0) {}
+//		
+//	}
+//	
+//	private void elegirClase(JTable tablaLocal) {
+//		
+//	}
+//	
 }

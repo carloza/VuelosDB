@@ -148,7 +148,7 @@ public class Init extends JFrame {
 					} else { 
 						label_helptxt.setText("Conectado");
 						label_helptxt.setForeground(Color.black);
-						Consulta.Iniciar();
+						Consulta.Iniciar(jtf_user.getText());
 						this.dispose();
 					}
 					rs.close();

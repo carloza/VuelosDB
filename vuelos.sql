@@ -358,7 +358,7 @@ BEGIN
 END;
 !
 
-delimiter ; 
+delimiter ;
 
 #-------------------------------------------------------------------------
 # RESERVAS VUELO IDA Y VUELTA
@@ -520,4 +520,4 @@ END;
 !
 
 
-delimiter ; 
+delimiter ;
