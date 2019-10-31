@@ -99,6 +99,19 @@ public class Reserva {
 		this.legajoEmpleado = legajoEmpleado;
 	}
 	
-	
+	public String toString () {
+		String toReturn = "";
+		if (!idaYVuelta) {
+			toReturn +="call reservar_vuelo_ida(" ; 
+		} else {
+			toReturn +="call reservar_vuelo_ida_vuelta(" ; 
+		}				
+		toReturn+= this.getNumeroVueloIda() + ",'" + this.getFechaVueloIda() +  "','" + this.getClaseVueloIda() + "',";		
+		if (idaYVuelta) {
+			toReturn+= this.getNumeroVueloVuelta() + ",'" + this.getFechaVueloVuelta() +  "','" + this.getClaseVueloVuelta() + "',";
+		}
+		toReturn+= "'" + this.getTipoDocumento() + "'," + this.getNumeroDocumento()+ "," + this.getLegajoEmpleado() + ");";		
+		return toReturn;		
+	}
 	
 }

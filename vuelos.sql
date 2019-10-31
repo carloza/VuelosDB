@@ -251,7 +251,8 @@ CREATE TABLE asientos_reservados(
 	GRANT INSERT, DELETE, UPDATE on vuelos.reservas TO 'empleado'@'%';
 	GRANT INSERT, DELETE, UPDATE on vuelos.pasajeros TO 'empleado'@'%';
 	GRANT INSERT, DELETE, UPDATE on vuelos.reserva_vuelo_clase TO 'empleado'@'%';
-
+	GRANT INSERT, DELETE, UPDATE on vuelos.asientos_reservados TO 'empleado'@'%';
+	
 	
 # Usuario: cliente
 # Permiso de lectura: vista 'vuelos_disponibles'>
@@ -270,7 +271,7 @@ delimiter !
 Reserva un vuelo de ida recibido por parametro
 */
 CREATE PROCEDURE reservar_vuelo_ida
-(IN vuelo INT, IN fecha DATE, IN clase VARCHAR(45), IN doc_tipo VARCHAR(45), IN doc_nro INT, IN nro_legajo INT)
+(IN vuelo INT, IN fecha DATE, IN clase VARCHAR(45), IN doc_tipo VARCHAR(45), IN doc_nro INT, IN nro_legajo INT, OUT salida_num INT, OUT salida VARCHAR(45))
 BEGIN
 	DECLARE codigo_SQL VARCHAR(5) DEFAULT '00000';
 	DECLARE codigo_MYSQL INT DEFAULT 0;
@@ -328,6 +329,9 @@ BEGIN
 							INSERT INTO reservas VALUES (NULL,(SELECT CURDATE()),@vencimiento,@estado_reserva,doc_tipo,doc_nro,nro_legajo);
 							INSERT INTO reserva_vuelo_clase VALUES ((SELECT LAST_INSERT_ID()),vuelo,fecha,clase);
 							SELECT 'RESERVA EXITOSA: ' AS resultado, @estado_reserva;
+							SET salida_num = 0;
+							SET salida = @estado_reserva;
+							
 							
 							UPDATE asientos_reservados AS ar
 							SET cantidad = cantidad + 1
@@ -338,22 +342,29 @@ BEGIN
 							); 
 
 						ELSE
-							SELECT 'ERROR: no hay disponibilidad para el vuelo y la clase seleccionados' AS result;
-						END IF;
-											
-						
-						
+							SELECT 'ERROR: no hay disponibilidad para el vuelo y la clase seleccionados' AS resultado;
+							SET salida_num = 1;
+							SET salida = 'ERROR: no hay disponibilidad para el vuelo y la clase seleccionados';
+						END IF;		
 					ELSE
 						SELECT 'ERROR: legajo invalido' AS resultado;
+						SET salida_num = 1;
+						SET salida = 'ERROR: legajo invalido';
 					END IF;	
 				ELSE
 					SELECT 'ERROR: pasajero invalido' AS resultado;
+					SET salida_num = 1;
+					SET salida = 'ERROR: pasajero invalido';
 				END IF;	
 			ELSE
 				SELECT 'ERROR: clase no encontrada para el vuelo' AS resultado;
+				SET salida_num = 1;
+				SET salida = 'ERROR: clase no encontrada para el vuelo';
 			END IF;	
 		ELSE
 			SELECT 'ERROR: fecha o vuelo incorrecto' AS resultado;
+			SET salida_num = 1;
+			SET salida = 'ERROR: fecha o vuelo incorrecto';
 		END IF;
 	COMMIT;
 
@@ -372,7 +383,7 @@ Reserva un vuelo de ida recibido por parametro
 delimiter !
 
 CREATE PROCEDURE reservar_vuelo_ida_vuelta
-(IN vuelo_ida INT, IN fecha_ida DATE, IN clase_ida VARCHAR(45), IN vuelo_vuelta INT, IN fecha_vuelta DATE, IN clase_vuelta VARCHAR(45),IN doc_tipo VARCHAR(45), IN doc_nro INT, IN nro_legajo INT)
+(IN vuelo_ida INT, IN fecha_ida DATE, IN clase_ida VARCHAR(45), IN vuelo_vuelta INT, IN fecha_vuelta DATE, IN clase_vuelta VARCHAR(45),IN doc_tipo VARCHAR(45), IN doc_nro INT, IN nro_legajo INT, OUT salida_num INT, OUT salida VARCHAR(45))
 BEGIN
 	DECLARE codigo_SQL VARCHAR(5) DEFAULT '00000';
 	DECLARE codigo_MYSQL INT DEFAULT 0;
@@ -476,6 +487,8 @@ BEGIN
 								INSERT INTO reserva_vuelo_clase VALUES ((SELECT LAST_INSERT_ID()),vuelo_vuelta,fecha_vuelta,clase_vuelta);
 
 								SELECT 'RESERVA EXITOSA: ' AS resultado, @estado_reserva;	
+								SET salida_num = 0;
+								SET salida = @estado_reserva;
 								
 								#ACTUALIZO ASIENTOS RESERVADOS
 						
@@ -497,29 +510,43 @@ BEGIN
 								
 							ELSE
 								SELECT 'ERROR: no hay disponibilidad en el vuelo de vuelta. Operación anulada' AS resultado;
+								SET salida_num = 1;
+								SET salida = 'ERROR: no hay disponibilidad en el vuelo de vuelta. Operación anulada';
 								ROLLBACK;
 							END IF;
 						ELSE
 							SELECT 'ERROR: no hay disponibilidad en el vuelo de ida. Operación anulada' AS resultado;
+							SET salida_num = 1;
+							SET salida = 'ERROR: no hay disponibilidad en el vuelo de ida. Operación anulada';
 							ROLLBACK;
 						END IF;
 						
 					ELSE
 						SELECT 'ERROR: legajo invalido' AS resultado;
+						SET salida_num = 1;
+						SET salida = 'ERROR: legajo invalido';
 					END IF;	
 				ELSE
 					SELECT 'ERROR: pasajero invalido' AS resultado;
+					SET salida_num = 1;
+					SET salida = 'ERROR: pasajero invalido';
 				END IF;	
 			ELSE
 				SELECT 'ERROR: clase y vuelo invalido' AS resultado;
+				SET salida_num = 1;
+				SET salida = 'ERROR: clase no encontrada para el vuelo';
 			END IF;	
 		ELSE
 			SELECT 'ERROR: fecha de vuelo o vuelo incorrecto' AS resultado;
+			SET salida_num = 1;
+			SET salida = 'ERROR: fecha o vuelo incorrecto';
 		END IF;
 	COMMIT;
 
 END;
 !
 
-
 delimiter ;
+
+GRANT EXECUTE ON PROCEDURE vuelos.reservar_vuelo_ida TO 'empleado'@'%';
+GRANT EXECUTE ON PROCEDURE vuelos.reservar_vuelo_ida_vuelta TO 'empleado'@'%';

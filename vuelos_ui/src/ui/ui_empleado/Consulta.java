@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -30,6 +31,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 //import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -110,7 +112,7 @@ public class Consulta {
 	private void initialize() {
 		
 		ubicaciones = new ArrayList<Ubicacion>();
-//		FechasIda = new ArrayList<Date>();
+		//FechasIda = new ArrayList<Date>();
 		
 		
 		frame = new JFrame("GUI Empleado");
@@ -118,14 +120,11 @@ public class Consulta {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
-		frame.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent arg0) {
-			}
-
-			public void keyReleased(KeyEvent arg0) {
-			}
+		frame.addKeyListener(new KeyAdapter() {
+		
 
 			public void keyPressed(KeyEvent arg0) {
+				System.out.println("Entro");
 				int key = arg0.getKeyCode(); 
 				if (key == KeyEvent.VK_ESCAPE) {
 					cancelarReserva();
@@ -337,14 +336,11 @@ public class Consulta {
 				if(performinReserva && resu == JOptionPane.OK_OPTION) {
 					String clase = table.getValueAt(tabla.getSelectedRow(), 1).toString();
 					setearReserva(tabla, vuelo, fecha, clase);
-				}else {
+				}/*else { VER ESTO, queda inconsistente con el boton para cerrar ventana del joptionpane
 					cancelarReserva();
-				}
+				}*/
 			}else {
-//				JOptionPane.showMessageDialog(frame,
-//						new JScrollPane(table),
-//	                    "Vuelos para "+fecha,
-//	                    JOptionPane.INFORMATION_MESSAGE);
+
 				JOptionPane.showOptionDialog(
 						frame,
 						new JScrollPane(table),
@@ -371,6 +367,7 @@ public class Consulta {
 			reserva.setNumeroVueloVuelta(vuelo);
 			reserva.setFechaVueloVuelta(fecha);
 			reserva.setClaseVueloVuelta(clase);
+			valoresIda = true;
 			valoresVuelta = true;
 		}
 		setearReservaSegundaFase();
@@ -411,26 +408,87 @@ public class Consulta {
 			} else {
 			    System.out.println("User canceled / closed the dialog, result = " + result);
 			}
-			String query = "";
-			if(!reserva.isIdaYVuelta()) {
-				query = "call reservar_vuelo_ida("+
-						reserva.getNumeroVueloIda()+", "+
-						reserva.getFechaVueloIda()+", "+
-						reserva.getClaseVueloIda();
-			}else {
-				query = "call reservar_vuelo_ida_vuelta("+
-						reserva.getNumeroVueloIda()+", "+
-						reserva.getFechaVueloIda()+", "+
-						reserva.getClaseVueloIda()+", "+
-						reserva.getNumeroVueloVuelta()+", "+
-						reserva.getFechaVueloVuelta()+", "+
-						reserva.getClaseVueloVuelta();
+			try {
+				reserva.setNumeroDocumento((NumberFormat.getInstance().parse(nroDoc)).intValue() + "");
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-			query = query +", "+tipoDoc+", "+nroDoc+", "+numeroLegajo+")";
-			System.out.println(query);
+			reserva.setTipoDocumento(tipoDoc);
+			reserva.setLegajoEmpleado(numeroLegajo);		
+			
+			String query = reserva.toString();
+			System.out.println(reserva);
 			performinReserva = false;
 			lblStatus.setText("Mostrando vuelos");
 			//TODO aca llamo al store procedure
+			CallableStatement stmt;
+			String sql = "";
+			if (reserva.isIdaYVuelta()) {
+				sql = "{CALL reservar_vuelo_ida_vuelta(?,?,?,?,?,?,?,?,?,?,?)}";
+			} else {
+				sql = "{CALL reservar_vuelo_ida(?,?,?,?,?,?,?,?)}";
+
+			}
+			try {
+				//PREPARACION STATMENT
+				stmt = vuelos_db.get_Connection_Vuelos_DB().prepareCall(sql);
+				
+				//Parametros entrada
+				stmt.setString(1, reserva.getNumeroVueloIda());
+				stmt.setString(2, reserva.getFechaVueloIda());
+				stmt.setString(3, reserva.getClaseVueloIda());
+				
+				if (reserva.isIdaYVuelta()) {
+					stmt.setString(4, reserva.getNumeroVueloVuelta());
+					stmt.setString(5, reserva.getFechaVueloVuelta());
+					stmt.setString(6, reserva.getClaseVueloVuelta());	
+					stmt.setString(7, reserva.getTipoDocumento());
+					stmt.setString(8, reserva.getNumeroDocumento());
+					stmt.setString(9, reserva.getLegajoEmpleado());		
+					stmt.registerOutParameter(10, java.sql.Types.INTEGER);
+					stmt.registerOutParameter(11, java.sql.Types.VARCHAR);
+				} else {
+					stmt.setString(4, reserva.getTipoDocumento());
+					stmt.setString(5, reserva.getNumeroDocumento());
+					stmt.setString(6, reserva.getLegajoEmpleado());
+					stmt.registerOutParameter(7, java.sql.Types.INTEGER);
+					stmt.registerOutParameter(8, java.sql.Types.VARCHAR);
+				}
+
+				stmt.executeUpdate();
+				
+				int out_param_salida_num = 0;						
+				int out_param_salida = 0;
+				
+				if (reserva.isIdaYVuelta()) {
+					out_param_salida_num = 10;
+					out_param_salida = 11;
+				} else {
+					out_param_salida_num = 7;
+					out_param_salida = 8;
+				}
+				
+				if (stmt.getInt(out_param_salida_num) == 0) {
+					JOptionPane.showMessageDialog(frame,
+		                    "Estado reserva: " + stmt.getString(out_param_salida),
+		                    "RESERVA EXITOSA",
+		                    JOptionPane.INFORMATION_MESSAGE);
+				} else {
+					JOptionPane.showMessageDialog(frame,
+							stmt.getString(out_param_salida),
+		                    "ERROR AL INGRESAR RESERVA",
+		                    JOptionPane.ERROR_MESSAGE);
+				}
+				
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//Luego de llamar al store procedure 
+			cancelarReserva();
+						
 		}
 	}
 
@@ -466,7 +524,6 @@ public class Consulta {
 			jspTablaVUELTA.setVisible(true);
 			jspTablaIDA.repaint();
 			String queryVuelta = generarQuery(destino, origen,fecha_vuelta);
-//			System.out.println(queryVuelta);
 			inflarUnaTabla(tablaVUELTA, queryVuelta);
 		}
 		inflarUnaTabla(tablaIDA, queryIda);
@@ -486,21 +543,6 @@ public class Consulta {
 		}
 	}
 	
-//	protected String generarQueryFecha(Ubicacion origen, Ubicacion destino, String fecha_ida) {
-//		String s = "select distinct "
-//					+ "vd.fecha "
-//					+ "from vuelos_disponibles as vd "
-//					+ "where (vd.ciudad_ap_salida = '"+origen.getCiudad()+"') and "
-//						+ "(vd.estado_ap_salida = '"+origen.getEstado()+"') and "
-//					+ "(vd.pais_ap_salida = '"+origen.getPais()+"') and "
-//					+ "(vd.ciudad_ap_llegada = '"+destino.getCiudad()+"') and "
-//					+ "(vd.estado_ap_llegada = '"+destino.getEstado()+"') and "
-//					+ "(vd.pais_ap_llegada = '"+destino.getPais()+"')";
-//		if (fecha_ida != null)
-//			s += " and (DATEDIFF('"+ fecha_ida.toString() + "',vd.fecha) <= 0)";
-//		
-//		return s;
-//	}
 	
 	protected String generarQuery(Ubicacion origen, Ubicacion destino, String fecha) {
 		String s = "select distinct "
@@ -519,32 +561,6 @@ public class Consulta {
 		}
 		return s;
 	}
-	
-//	public static DefaultTableModel buildTableModel(ResultSet rs)
-//	        throws SQLException {
-//
-//	    ResultSetMetaData metaData = rs.getMetaData();
-//
-//	    // names of columns
-//	    Vector<String> columnNames = new Vector<String>();
-//	    int columnCount = metaData.getColumnCount();
-//	    for (int column = 1; column <= columnCount; column++) {
-//	        columnNames.add(metaData.getColumnName(column));
-//	    }
-//
-//	    // data of the table
-//	    Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-//	    while (rs.next()) {
-//	        Vector<Object> vector = new Vector<Object>();
-//	        for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-//	            vector.add(rs.getObject(columnIndex));
-//	        }
-//	        data.add(vector);
-//	    }
-//
-//	    return new DefaultTableModel(data, columnNames);
-//
-//	}
 	
 	private class ListenerComboBox implements ActionListener {
 
@@ -624,24 +640,19 @@ public class Consulta {
 			reserva = new Reserva(rdbtnIdaYVuelta.isSelected());
 			lblStatus.setText("Realizando reserva");
 			
-//			cambiarMouseListener(tablaIDA, new TablaListenerReservar(tablaIDA));
-//			cambiarMouseListener(tablaVUELTA, new TablaListenerReservar(tablaVUELTA));
-			
 		}
 		
 	}
 	
-//	private void cambiarMouseListener(JTable tabla, MouseListener ml) {
-//		for( MouseListener m : tabla.getMouseListeners() ) {
-//			tabla.removeMouseListener( m );
-//	    }
-//		tabla.addMouseListener(ml);
-//	}
-	
+
 	private void cancelarReserva() {
 		//aca seteo lo necesario y muestro un cartel de reserva cancelada
 		if(performinReserva) {
 			performinReserva = false;
+			valoresIda = false;
+			valoresVuelta = false;
+			tablaIDA.clearSelection();
+			tablaVUELTA.clearSelection();						
 			lblStatus.setText("Reserva cancelada");
 			Timer timer = new Timer(3000, new AbstractAction() {
 			    @Override
@@ -654,3 +665,4 @@ public class Consulta {
 		
 	}
 }
+
