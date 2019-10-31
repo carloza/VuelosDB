@@ -7,7 +7,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -72,7 +71,6 @@ public class Consulta {
 	private JTable tablaVUELTA;
 	private JScrollPane jspTablaVUELTA;
 	private ArrayList<Ubicacion> ubicaciones;
-//	private ArrayList<Date> FechasIda,FechasVuelta;
 	private JButton btnReserva;
 	private Reserva reserva;
 	private boolean performinReserva;
@@ -300,9 +298,9 @@ public class Consulta {
 		jspTablaVUELTA.setBounds(12, 312, 772, 157);
 		frame.getContentPane().add(jspTablaVUELTA);
 		
-		btnReserva = new JButton("Realizar una reserva");
+		btnReserva = new JButton("Habilitar modo reserva");
 		btnReserva.setBounds(541, 481, 243, 25);
-		btnReserva.addActionListener(new BotonReservaListener());
+		btnReserva.addActionListener(new BotonReservaListener(btnReserva));
 		btnReserva.setEnabled(false);
 		frame.getContentPane().add(btnReserva);
 		
@@ -419,7 +417,6 @@ public class Consulta {
 				reserva.setTipoDocumento(tipoDoc);
 				reserva.setLegajoEmpleado(numeroLegajo);		
 				
-				String query = reserva.toString();
 				System.out.println(reserva);
 				performinReserva = false;
 				lblStatus.setText("Mostrando vuelos");
@@ -629,22 +626,34 @@ public class Consulta {
 	
 	private class BotonReservaListener implements ActionListener{
 
+		JButton reservaButton;
+		public BotonReservaListener (JButton reservaButton) {
+			this.reservaButton = reservaButton;
+			
+		}
 		public void actionPerformed(ActionEvent arg0) {
-			JOptionPane.showMessageDialog(frame,
-					"Uds esta por realizar una reserva \n"
-					+ "en cualquier momento puede tocar la tecla <<ESC>> \n"
-					+ "para cancelar el proceso de reservacion",
-                    "Reservas",
-                    JOptionPane.INFORMATION_MESSAGE);
-			JOptionPane.showMessageDialog(frame,
-					"Para comenzar el proceso de reserva \n"
-					+ "seleccion el vuelo de ida (y vuelta si corresponde) \n"
-					+ "y luego la clase con la que desea viajar",
-                    "Reservas",
-                    JOptionPane.INFORMATION_MESSAGE);
-			performinReserva = true;
-			reserva = new Reserva(rdbtnIdaYVuelta.isSelected());
-			lblStatus.setText("Realizando reserva");
+			if (reservaButton.getText().equals("Habilitar modo reserva")) {
+				JOptionPane.showMessageDialog(frame,
+						"Uds esta por realizar una reserva \n"
+						+ "en cualquier momento puede tocar la tecla <<ESC>> \n"
+						+ "para cancelar el proceso de reservacion",
+	                    "Reservas",
+	                    JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(frame,
+						"Para comenzar el proceso de reserva \n"
+						+ "seleccion el vuelo de ida (y vuelta si corresponde) \n"
+						+ "y luego la clase con la que desea viajar",
+	                    "Reservas",
+	                    JOptionPane.INFORMATION_MESSAGE);
+				performinReserva = true;
+				reserva = new Reserva(rdbtnIdaYVuelta.isSelected());
+				reservaButton.setText("Deshabilitar modo reserva");
+				lblStatus.setText("Realizando reserva");
+			} else {
+				cancelarReserva();
+				reservaButton.setText("Habilitar modo reserva");
+			}
+			
 			
 		}
 		
@@ -661,7 +670,12 @@ public class Consulta {
 			tablaVUELTA.clearSelection();						
 			lblStatus.setText("Reserva cancelada");
 			Timer timer = new Timer(3000, new AbstractAction() {
-			    @Override
+			    /**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
 			    public void actionPerformed(ActionEvent ae) {
 			        lblStatus.setText("Mostrando vuelos");
 			    }
