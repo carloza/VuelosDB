@@ -17,20 +17,24 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.Timer;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 //import javax.swing.table.DefaultTableModel;
 import javax.swing.text.MaskFormatter;
+import javax.swing.text.NumberFormatter;
 
 import other.TuneadaTableModel;
 import sql_conn.vuelos_db;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 
 import java.sql.ResultSet;
 //import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 //import java.time.LocalDate;
@@ -39,6 +43,7 @@ import java.util.ArrayList;
 //import java.util.Date;
 //import java.util.Vector;
 
+import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 
@@ -72,6 +77,7 @@ public class Consulta {
 	private boolean valoresIda;
 	private boolean valoresVuelta;
 	private String numeroLegajo;
+	private JLabel lblStatus;
 
 
 	/**
@@ -137,7 +143,7 @@ public class Consulta {
 		frame.getContentPane().add(lblSeleccioneElTipo);
 
 		lblAyuda = new JLabel("Seleccione tipo de vuelo, origen, destino y fechas correspondientes");
-		lblAyuda.setBounds(0, 0, 400, 15);
+		lblAyuda.setBounds(0, 0, 481, 15);
 		frame.getContentPane().add(lblAyuda);
 		
 		rdbtnSoloIda = new JRadioButton("Solo Ida");
@@ -216,9 +222,11 @@ public class Consulta {
 				boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
 				if(!idayvuelta) {
 					btnVer.setEnabled(true);
+					btnReserva.setEnabled(false);
 				} else {
 					btnVer.setEnabled(false);
 					jftfFechaVuelta.setEnabled(true);
+					btnReserva.setEnabled(false);
 				}
 			}
 		});
@@ -298,6 +306,14 @@ public class Consulta {
 		btnReserva.addActionListener(new BotonReservaListener());
 		btnReserva.setEnabled(false);
 		frame.getContentPane().add(btnReserva);
+		
+		JLabel lblEstadoActual = new JLabel("Estado actual:");
+		lblEstadoActual.setBounds(12, 486, 106, 15);
+		frame.getContentPane().add(lblEstadoActual);
+		
+		lblStatus = new JLabel("Seleccione Datos de vuelo");
+		lblStatus.setBounds(130, 486, 317, 15);
+		frame.getContentPane().add(lblStatus);
 	}
 	
 	private void rowSeleccionada(JTable tabla) {
@@ -325,10 +341,18 @@ public class Consulta {
 					cancelarReserva();
 				}
 			}else {
-				JOptionPane.showMessageDialog(frame,
+//				JOptionPane.showMessageDialog(frame,
+//						new JScrollPane(table),
+//	                    "Vuelos para "+fecha,
+//	                    JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showOptionDialog(
+						frame,
 						new JScrollPane(table),
-	                    "Vuelos para "+fecha,
-	                    JOptionPane.INFORMATION_MESSAGE);
+						"Vuelos para "+fecha,
+						JOptionPane.DEFAULT_OPTION,
+						JOptionPane.INFORMATION_MESSAGE,
+						null,
+						new Object[]{}, null);
 			}
 			stmt.close();
 		} catch (SQLException e) {
@@ -353,50 +377,61 @@ public class Consulta {
 	}
 
 	private void setearReservaSegundaFase() {
-		if(!reserva.isIdaYVuelta() && valoresIda) {
-			String tipoDoc = JOptionPane.showInputDialog("Ingrese su Tipo de documento");
-			String nroDoc = JOptionPane.showInputDialog("Ingrese su numero de documento");
-//			reservar_vuelo_ida(IN vuelo INT,
-//								IN fecha DATE,
-//								IN clase VARCHAR(45),
-//								IN doc_tipo VARCHAR(45),
-//								IN doc_nro INT, 
-//								IN nro_legajo INT)
-			String query = "call reservar_vuelo_ida("+
-					reserva.getNumeroVueloIda()+", "+
-					reserva.getFechaVueloIda()+", "+
-					reserva.getClaseVueloIda()+", "+
-					tipoDoc+", "+
-					nroDoc+", "+
-					numeroLegajo+")";
-			System.out.println(query);
-			performinReserva = false;
-		}else if (reserva.isIdaYVuelta() && valoresIda && valoresVuelta) {
-			String tipoDoc = JOptionPane.showInputDialog("Ingrese su Tipo de documento");
-			String nroDoc = JOptionPane.showInputDialog("Ingrese su numero de documento");
-//			reservar_vuelo_ida_vuelta (IN vuelo_ida INT, 
-//									IN fecha_ida DATE,
-//									IN clase_ida VARCHAR(45),
-//									IN vuelo_vuelta INT,
-//									IN fecha_vuelta DATE, 
-//									IN clase_vuelta VARCHAR(45),
-//									IN doc_tipo VARCHAR(45),
-//									IN doc_nro INT, 
-//									IN nro_legajo INT)
-			String query = "call reservar_vuelo_ida("+
+		if((!reserva.isIdaYVuelta() && valoresIda) || (valoresIda && valoresVuelta)) {
+			JOptionPane.showMessageDialog(frame,
+					"Vuelo(s) seleccionado(s) \n"
+					+ "Solo resta ingresar informacion del pasajero\n",
+                    "Reservas",
+                    JOptionPane.INFORMATION_MESSAGE);
+			
+			//aca pido el tipo de documento
+			String[] tDoc = { "DNI", "LE", "LU", "PASAPORTE", "OTRO" };
+			String tipoDoc = (String) JOptionPane.showInputDialog(frame, 
+					"Seleccione su Tipo de documento",
+			        "",
+			        JOptionPane.QUESTION_MESSAGE, 
+			        null, 
+			        tDoc, 
+			        tDoc[0]);
+			if(tipoDoc == null) cancelarReserva();
+			
+			//aca el numero del documento
+		    NumberFormatter formatter = new NumberFormatter(NumberFormat.getInstance());
+		    formatter.setValueClass(Integer.class);
+		    formatter.setMinimum(0);
+		    formatter.setMaximum(Integer.MAX_VALUE);
+		    formatter.setAllowsInvalid(false);
+		    formatter.setCommitsOnValidEdit(true);
+		    JFormattedTextField nDoc = new JFormattedTextField(formatter);
+			JComponent[] inputs = new JComponent[] { new JLabel("Ingrese su numero de documento"), nDoc };
+			String nroDoc = "";
+			int result = JOptionPane.showConfirmDialog(null, inputs, "My custom dialog", JOptionPane.PLAIN_MESSAGE);
+			if (result == JOptionPane.OK_OPTION) {
+			    nroDoc = nDoc.getText();
+			} else {
+			    System.out.println("User canceled / closed the dialog, result = " + result);
+			}
+			String query = "";
+			if(!reserva.isIdaYVuelta()) {
+				query = "call reservar_vuelo_ida("+
+						reserva.getNumeroVueloIda()+", "+
+						reserva.getFechaVueloIda()+", "+
+						reserva.getClaseVueloIda();
+			}else {
+				query = "call reservar_vuelo_ida_vuelta("+
 						reserva.getNumeroVueloIda()+", "+
 						reserva.getFechaVueloIda()+", "+
 						reserva.getClaseVueloIda()+", "+
 						reserva.getNumeroVueloVuelta()+", "+
 						reserva.getFechaVueloVuelta()+", "+
-						reserva.getClaseVueloVuelta()+", "+
-						tipoDoc+", "+
-						nroDoc+", "+
-						numeroLegajo+")";
+						reserva.getClaseVueloVuelta();
+			}
+			query = query +", "+tipoDoc+", "+nroDoc+", "+numeroLegajo+")";
 			System.out.println(query);
 			performinReserva = false;
+			lblStatus.setText("Mostrando vuelos");
+			//TODO aca llamo al store procedure
 		}
-		
 	}
 
 	private void inflarTablas() {
@@ -520,7 +555,8 @@ public class Consulta {
 			jftfFechaIda.setEnabled(true);
 			boolean idayvuelta =(rdbtnIdaYVuelta.isSelected())? true : false ;
 			if (!idayvuelta)
-				jftfFechaVuelta.setEnabled(false);			
+				jftfFechaVuelta.setEnabled(false);
+			btnReserva.setEnabled(false);
 		}
 		
 		
@@ -552,6 +588,7 @@ public class Consulta {
 
 		public void actionPerformed(ActionEvent arg0) {
 			inflarTablas();
+			lblStatus.setText("Mostrando vuelos");
 		}
 
 	}
@@ -563,6 +600,7 @@ public class Consulta {
 		        // Your selected code here.
 		    	jftfFechaVuelta.setEnabled(false);
 		    	btnVer.setEnabled(false);
+		    	btnReserva.setEnabled(false);
 		    }
 		}
 	}
@@ -571,12 +609,20 @@ public class Consulta {
 
 		public void actionPerformed(ActionEvent arg0) {
 			JOptionPane.showMessageDialog(frame,
-					"Uds esta por realizar una reserva, en cualquier momento puede tocar "
-					+ "la tecla <<ESC>> para cancelar el proceso de reservacion",
+					"Uds esta por realizar una reserva \n"
+					+ "en cualquier momento puede tocar la tecla <<ESC>> \n"
+					+ "para cancelar el proceso de reservacion",
+                    "Reservas",
+                    JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(frame,
+					"Para comenzar el proceso de reserva \n"
+					+ "seleccion el vuelo de ida (y vuelta si corresponde) \n"
+					+ "y luego la clase con la que desea viajar",
                     "Reservas",
                     JOptionPane.INFORMATION_MESSAGE);
 			performinReserva = true;
 			reserva = new Reserva(rdbtnIdaYVuelta.isSelected());
+			lblStatus.setText("Realizando reserva");
 			
 //			cambiarMouseListener(tablaIDA, new TablaListenerReservar(tablaIDA));
 //			cambiarMouseListener(tablaVUELTA, new TablaListenerReservar(tablaVUELTA));
@@ -594,33 +640,17 @@ public class Consulta {
 	
 	private void cancelarReserva() {
 		//aca seteo lo necesario y muestro un cartel de reserva cancelada
-		performinReserva = false;
+		if(performinReserva) {
+			performinReserva = false;
+			lblStatus.setText("Reserva cancelada");
+			Timer timer = new Timer(3000, new AbstractAction() {
+			    @Override
+			    public void actionPerformed(ActionEvent ae) {
+			        lblStatus.setText("Mostrando vuelos");
+			    }
+			});
+			timer.setRepeats(false);
+		}
+		
 	}
-	
-//	private class MouseListenerElegirClase implements MouseListener{
-//		
-//		private JTable tablaLocal;
-//		
-//		public MouseListenerElegirClase(JTable tablaLocal) {
-//			this.tablaLocal = tablaLocal;
-//		}
-//
-//		public void mouseClicked(MouseEvent arg0) {
-//			elegirClase(tablaLocal);
-//		}
-//
-//		public void mouseEntered(MouseEvent arg0) {}
-//
-//		public void mouseExited(MouseEvent arg0) {}
-//
-//		public void mousePressed(MouseEvent arg0) {}
-//
-//		public void mouseReleased(MouseEvent arg0) {}
-//		
-//	}
-//	
-//	private void elegirClase(JTable tablaLocal) {
-//		
-//	}
-//	
 }
