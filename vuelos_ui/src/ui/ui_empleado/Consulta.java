@@ -1,6 +1,8 @@
 package ui.ui_empleado;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -118,6 +120,9 @@ public class Consulta {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+		
 		frame.addKeyListener(new KeyAdapter() {
 		
 
@@ -417,7 +422,6 @@ public class Consulta {
 				reserva.setTipoDocumento(tipoDoc);
 				reserva.setLegajoEmpleado(numeroLegajo);		
 				
-				System.out.println(reserva);
 				performinReserva = false;
 				lblStatus.setText("Mostrando vuelos");
 				//TODO aca llamo al store procedure
