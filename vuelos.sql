@@ -252,6 +252,9 @@ CREATE TABLE asientos_reservados(
 	GRANT INSERT, DELETE, UPDATE on vuelos.pasajeros TO 'empleado'@'%';
 	GRANT INSERT, DELETE, UPDATE on vuelos.reserva_vuelo_clase TO 'empleado'@'%';
 	GRANT INSERT, DELETE, UPDATE on vuelos.asientos_reservados TO 'empleado'@'%';
+	# la siguiente linea es para que la aplicacion no de error al acceder a los
+	# store procedure en linux
+	#GRANT SELECT ON mysql.proc TO 'empleado'@'%';
 	
 	
 # Usuario: cliente
