@@ -390,104 +390,110 @@ public class Consulta {
 			        null, 
 			        tDoc, 
 			        tDoc[0]);
-			if(tipoDoc == null) cancelarReserva();
 			
-			//aca el numero del documento
-		    NumberFormatter formatter = new NumberFormatter(NumberFormat.getInstance());
-		    formatter.setValueClass(Integer.class);
-		    formatter.setMinimum(0);
-		    formatter.setMaximum(Integer.MAX_VALUE);
-		    formatter.setAllowsInvalid(false);
-		    formatter.setCommitsOnValidEdit(true);
-		    JFormattedTextField nDoc = new JFormattedTextField(formatter);
-			JComponent[] inputs = new JComponent[] { new JLabel("Ingrese su numero de documento"), nDoc };
-			String nroDoc = "";
-			int result = JOptionPane.showConfirmDialog(null, inputs, "My custom dialog", JOptionPane.PLAIN_MESSAGE);
-			if (result == JOptionPane.OK_OPTION) {
-			    nroDoc = nDoc.getText();
+			if(tipoDoc == null) { 
+				cancelarReserva();			
 			} else {
-			    System.out.println("User canceled / closed the dialog, result = " + result);
+				//aca el numero del documento
+			    NumberFormatter formatter = new NumberFormatter(NumberFormat.getInstance());
+			    formatter.setValueClass(Integer.class);
+			    formatter.setMinimum(0);
+			    formatter.setMaximum(Integer.MAX_VALUE);
+			    formatter.setAllowsInvalid(false);
+			    formatter.setCommitsOnValidEdit(true);
+			    JFormattedTextField nDoc = new JFormattedTextField(formatter);
+				JComponent[] inputs = new JComponent[] { new JLabel("Ingrese su numero de documento"), nDoc };
+				String nroDoc = "";
+				int result = JOptionPane.showConfirmDialog(null, inputs, "My custom dialog", JOptionPane.PLAIN_MESSAGE);
+				if (result == JOptionPane.OK_OPTION) {
+				    nroDoc = nDoc.getText();
+				} else {
+				    System.out.println("User canceled / closed the dialog, result = " + result);
+				}
+				try {
+					reserva.setNumeroDocumento((NumberFormat.getInstance().parse(nroDoc)).intValue() + "");
+				} catch (ParseException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				reserva.setTipoDocumento(tipoDoc);
+				reserva.setLegajoEmpleado(numeroLegajo);		
+				
+				String query = reserva.toString();
+				System.out.println(reserva);
+				performinReserva = false;
+				lblStatus.setText("Mostrando vuelos");
+				//TODO aca llamo al store procedure
+				CallableStatement stmt;
+				String sql = "";
+				if (reserva.isIdaYVuelta()) {
+					sql = "{CALL reservar_vuelo_ida_vuelta(?,?,?,?,?,?,?,?,?,?,?)}";
+				} else {
+					sql = "{CALL reservar_vuelo_ida(?,?,?,?,?,?,?,?)}";
+
+				}
+				try {
+					//PREPARACION STATMENT
+					stmt = vuelos_db.get_Connection_Vuelos_DB().prepareCall(sql);
+					
+					//Parametros entrada
+					stmt.setString(1, reserva.getNumeroVueloIda());
+					stmt.setString(2, reserva.getFechaVueloIda());
+					stmt.setString(3, reserva.getClaseVueloIda());
+					
+					if (reserva.isIdaYVuelta()) {
+						stmt.setString(4, reserva.getNumeroVueloVuelta());
+						stmt.setString(5, reserva.getFechaVueloVuelta());
+						stmt.setString(6, reserva.getClaseVueloVuelta());	
+						stmt.setString(7, reserva.getTipoDocumento());
+						stmt.setString(8, reserva.getNumeroDocumento());
+						stmt.setString(9, reserva.getLegajoEmpleado());		
+						stmt.registerOutParameter(10, java.sql.Types.INTEGER);
+						stmt.registerOutParameter(11, java.sql.Types.VARCHAR);
+					} else {
+						stmt.setString(4, reserva.getTipoDocumento());
+						stmt.setString(5, reserva.getNumeroDocumento());
+						stmt.setString(6, reserva.getLegajoEmpleado());
+						stmt.registerOutParameter(7, java.sql.Types.INTEGER);
+						stmt.registerOutParameter(8, java.sql.Types.VARCHAR);
+					}
+
+					stmt.executeUpdate();
+					
+					int out_param_salida_num = 0;						
+					int out_param_salida = 0;
+					
+					if (reserva.isIdaYVuelta()) {
+						out_param_salida_num = 10;
+						out_param_salida = 11;
+					} else {
+						out_param_salida_num = 7;
+						out_param_salida = 8;
+					}
+					
+					if (stmt.getInt(out_param_salida_num) == 0) {
+						JOptionPane.showMessageDialog(frame,
+			                    "Estado reserva: " + stmt.getString(out_param_salida),
+			                    "RESERVA EXITOSA",
+			                    JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(frame,
+								stmt.getString(out_param_salida),
+			                    "ERROR AL INGRESAR RESERVA",
+			                    JOptionPane.ERROR_MESSAGE);
+						cancelarReserva();
+					}
+					
+					stmt.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//Luego de llamar al store procedure 
+				cancelarReserva();
 			}
-			try {
-				reserva.setNumeroDocumento((NumberFormat.getInstance().parse(nroDoc)).intValue() + "");
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			reserva.setTipoDocumento(tipoDoc);
-			reserva.setLegajoEmpleado(numeroLegajo);		
+				
 			
-			String query = reserva.toString();
-			System.out.println(reserva);
-			performinReserva = false;
-			lblStatus.setText("Mostrando vuelos");
-			//TODO aca llamo al store procedure
-			CallableStatement stmt;
-			String sql = "";
-			if (reserva.isIdaYVuelta()) {
-				sql = "{CALL reservar_vuelo_ida_vuelta(?,?,?,?,?,?,?,?,?,?,?)}";
-			} else {
-				sql = "{CALL reservar_vuelo_ida(?,?,?,?,?,?,?,?)}";
-
-			}
-			try {
-				//PREPARACION STATMENT
-				stmt = vuelos_db.get_Connection_Vuelos_DB().prepareCall(sql);
-				
-				//Parametros entrada
-				stmt.setString(1, reserva.getNumeroVueloIda());
-				stmt.setString(2, reserva.getFechaVueloIda());
-				stmt.setString(3, reserva.getClaseVueloIda());
-				
-				if (reserva.isIdaYVuelta()) {
-					stmt.setString(4, reserva.getNumeroVueloVuelta());
-					stmt.setString(5, reserva.getFechaVueloVuelta());
-					stmt.setString(6, reserva.getClaseVueloVuelta());	
-					stmt.setString(7, reserva.getTipoDocumento());
-					stmt.setString(8, reserva.getNumeroDocumento());
-					stmt.setString(9, reserva.getLegajoEmpleado());		
-					stmt.registerOutParameter(10, java.sql.Types.INTEGER);
-					stmt.registerOutParameter(11, java.sql.Types.VARCHAR);
-				} else {
-					stmt.setString(4, reserva.getTipoDocumento());
-					stmt.setString(5, reserva.getNumeroDocumento());
-					stmt.setString(6, reserva.getLegajoEmpleado());
-					stmt.registerOutParameter(7, java.sql.Types.INTEGER);
-					stmt.registerOutParameter(8, java.sql.Types.VARCHAR);
-				}
-
-				stmt.executeUpdate();
-				
-				int out_param_salida_num = 0;						
-				int out_param_salida = 0;
-				
-				if (reserva.isIdaYVuelta()) {
-					out_param_salida_num = 10;
-					out_param_salida = 11;
-				} else {
-					out_param_salida_num = 7;
-					out_param_salida = 8;
-				}
-				
-				if (stmt.getInt(out_param_salida_num) == 0) {
-					JOptionPane.showMessageDialog(frame,
-		                    "Estado reserva: " + stmt.getString(out_param_salida),
-		                    "RESERVA EXITOSA",
-		                    JOptionPane.INFORMATION_MESSAGE);
-				} else {
-					JOptionPane.showMessageDialog(frame,
-							stmt.getString(out_param_salida),
-		                    "ERROR AL INGRESAR RESERVA",
-		                    JOptionPane.ERROR_MESSAGE);
-				}
-				
-				stmt.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			//Luego de llamar al store procedure 
-			cancelarReserva();
 						
 		}
 	}

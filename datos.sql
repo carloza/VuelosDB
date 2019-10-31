@@ -55,6 +55,8 @@ INSERT INTO salidas VALUES ("1001", 'Ma', '09:00:00', '09:50:00',"737-800");
 
 INSERT INTO salidas VALUES ("1002", 'Do', '07:00:00', '16:00:00',"717");
 INSERT INTO salidas VALUES ("2001", 'Lu', '11:00:00', '13:00:00',"190");
+INSERT INTO salidas VALUES ("2002", 'Ma', '11:00:00', '13:00:00',"190");
+
 INSERT INTO salidas VALUES ("3999", 'Mi', '07:00:00', '16:00:00',"777");
 INSERT INTO salidas VALUES ("4951", 'Vi', '10:00:00', '18:20:00',"A330");
 INSERT INTO salidas VALUES ("5231", 'Mi', '17:00:00', '19:00:00',"717");

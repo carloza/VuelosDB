@@ -49,14 +49,22 @@ CREATE TRIGGER crear_instancias_vuelo
 AFTER INSERT ON salidas        
 FOR EACH ROW
 BEGIN	
-	SET @dia_semana_new = NEW.dia;
+	SET @dia_semana_new = NEW.dia; #Dia de semana insertado cuyo formato respeta un enum de dos caracteres seteado al crear la tabla.
 	SET @num_dia_new = 0;
+	#Obtengo el numero del dia de la semana al cual corresponde el dia, que se encuentra expresado en caracteres en la var dia_semana_new
 	CALL obtener_num_dia_sem(@dia_semana_new, @num_dia_new);
 	
 	SET @dia_actual = (SELECT CURDATE());
 	SET @num_dia_actual = (SELECT DAYOFWEEK(@dia_actual));
 	
-	SET @diferencia = (SELECT ABS(@num_dia_actual - @num_dia_new));
+	SET @diferencia = @num_dia_actual - @num_dia_new;
+	IF (@diferencia < 0)
+	THEN	
+		SET @diferencia = (SELECT ABS(@diferencia));	
+	ELSE
+		SET @diferencia = (SELECT ABS(@diferencia - 7));
+	END IF;
+	
 	SET @dia_a_insertar = (SELECT DATE_ADD(@dia_actual, INTERVAL @diferencia DAY));
 	
 	SET @fecha_limite = (SELECT DATE_ADD(@dia_actual,INTERVAL 1 YEAR));
